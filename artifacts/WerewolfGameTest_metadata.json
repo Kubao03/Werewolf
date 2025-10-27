@@ -1,0 +1,139 @@
+{
+	"compiler": {
+		"version": "0.8.24+commit.e11b9ed9"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"name": "beforeAll",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testEnded_CanReadRoles",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testGameFlow_GoodWin",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testGameFlow_WolvesWin",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testLobby_HostCannotJoin",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testLobby_InitialState",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testLobby_PlayerCannotJoinTwice",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testLobby_PlayersCanJoin",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testLobby_StartGameFailsIfTooFewPlayers",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testSetup_AssignRolesFailsWrongLength",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testSetup_AssignRolesFailsWrongWolfCount",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"tests/Werewolf_test.sol": "WerewolfGameTest"
+		},
+		"evmVersion": "shanghai",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/Werewolf.sol": {
+			"keccak256": "0x1ac1f756b2ec832a5f6dc33477a114ab31b079c62c7069dd8dcd709e0f69d575",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://922f3d3f3198f27f703544d10f2648bb28493678c8d05dbc912e7b1ca7f0a3ae",
+				"dweb:/ipfs/QmbAQTND1agWzwBbcMNmNEB2hWvPvJ9zjX4Hhmoe5DYtN1"
+			]
+		},
+		"remix_tests.sol": {
+			"keccak256": "0xe2783cdc204cba8c72494119339f1d90f9022b15d6c718c668b7f097d8e29787",
+			"license": "GPL-3.0",
+			"urls": [
+				"bzz-raw://bb6a22e64c7f16bcaab63b1c1a1b269d5be8a6d37bdd9dec1718477ab916b18e",
+				"dweb:/ipfs/QmdkW1tT5iadBvaHMCoskhDGZKnfdg8o1D9CcoQYtdJet7"
+			]
+		},
+		"tests/Werewolf_test.sol": {
+			"keccak256": "0x0217998668dadb48a8565238c1e60a27365013ec895729835163b8501a8f757a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://6f6e65b5b603af9136ea8ba908c81cd56685ea50f8b1c6e63a6bf0668844ec41",
+				"dweb:/ipfs/QmRYQbDvZXm2AW6goKSL98wrE7hfHx76pwCGFLDCAPrP1S"
+			]
+		}
+	},
+	"version": 1
+}
