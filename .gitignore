@@ -1,1 +1,7 @@
 .DS_Store
+/artifacts/
+/artifacts/*
+/.deps/
+/.deps/*
+/.states/
+/.states/*
