@@ -1,8 +1,35 @@
+# macOS
 .DS_Store
-/artifacts/
-/artifacts/*
-/.deps/
-/.deps/*
-/.states/
-/.states/*
-/tests/
+
+# Remix IDE / Hardhat
+artifacts/
+.deps/
+.states/
+cache/
+typechain/
+typechain-types/
+
+# Testing
+tests/
+coverage/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+.cache/
