@@ -5,3 +5,4 @@
 /.deps/*
 /.states/
 /.states/*
+/tests/
