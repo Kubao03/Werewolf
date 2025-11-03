@@ -1,28 +1,36 @@
-REMIX DEFAULT WORKSPACE
+# Werewolf
 
-Remix default workspace is present when:
-i. Remix loads for the very first time 
-ii. A new workspace is created with 'Default' template
-iii. There are no files existing in the File Explorer
+**Werewolf** is a blockchain-based social deduction game protocol inspired by *Werewolf* (also known as *Mafia*).
+This repository currently contains the smart contracts and deployment scripts used in the **Remix IDE**.
+Future updates will introduce a front-end interface to enable full gameplay through user interactions with the contracts.
 
-This workspace contains 3 directories:
+## Project Overview
 
-1. 'contracts': Holds three contracts with increasing levels of complexity.
-2. 'scripts': Contains four typescript files to deploy a contract. It is explained below.
-3. 'tests': Contains one Solidity test file for 'Ballot' contract & one JS test file for 'Storage' contract.
+The goal of this project is to design and implement an on-chain protocol that allows players to join a decentralized “Werewolf” game — handling roles, voting, and game states entirely through smart contracts.
 
-SCRIPTS
+## Structure
 
-The 'scripts' folder has four typescript files which help to deploy the 'Storage' contract using 'web3.js' and 'ethers.js' libraries.
+* `contracts/` — Solidity smart contracts defining the game logic.
+* `scripts/` — Deployment scripts for both Web3.js and Ethers.js environments.
+* `Figures/` — Game-related figures or visual assets.
+* `.gitignore`, `remix.config.json` — Configuration files for Remix IDE.
 
-For the deployment of any other contract, just update the contract name from 'Storage' to the desired contract and provide constructor arguments accordingly 
-in the file `deploy_with_ethers.ts` or  `deploy_with_web3.ts`
+## Usage
 
-In the 'tests' folder there is a script containing Mocha-Chai unit tests for 'Storage' contract.
+You can import the project directly into **Remix IDE**:
 
-To run a script, right click on file name in the file explorer and click 'Run'. Remember, Solidity file must already be compiled.
-Output from script will appear in remix terminal.
+1. Load the `contracts/` folder to compile the smart contracts.
+2. Use the scripts under `scripts/` to deploy via either Web3.js or Ethers.js.
+3. Interact with the deployed contracts through Remix or a connected front-end (to be added).
 
-Please note, require/import is supported in a limited manner for Remix supported modules.
-For now, modules supported by Remix are ethers, web3, swarmgw, chai, multihashes, remix and hardhat only for hardhat.ethers object/plugin.
-For unsupported modules, an error like this will be thrown: '<module_name> module require is not supported by Remix IDE' will be shown.
+## Future Work
+
+* Develop a web-based front-end for gameplay interaction.
+* Implement wallet connections and transaction handling.
+* Expand the protocol to support multiple game rooms and sessions.
+* Optimize gas costs and enhance contract security.
+
+## License
+
+This project is licensed under the **MIT License**.
+
