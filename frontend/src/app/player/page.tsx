@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ethers } from 'ethers';
 import Link from 'next/link';
 import { useWallet } from '@/contexts/WalletContext';
@@ -11,9 +11,23 @@ import PlayerHunter from '@/components/PlayerHunter';
 import PlayerEnd from '@/components/PlayerEnd';
 import { GAME_ABI, PHASE_NAMES, ROLE_NAMES } from '@/lib/gameAbi';
 
+// Helper functions for localStorage
+const getSavedGameKey = (account: string) => `werewolf_player_game_${account.toLowerCase()}`;
+const saveGameAddress = (account: string, gameAddress: string) => {
+  if (account && ethers.isAddress(gameAddress)) {
+    localStorage.setItem(getSavedGameKey(account), gameAddress);
+  }
+};
+const loadGameAddress = (account: string): string | null => {
+  if (!account) return null;
+  const saved = localStorage.getItem(getSavedGameKey(account));
+  return saved && ethers.isAddress(saved) ? saved : null;
+};
+
 export default function PlayerPage() {
   const { provider, account, chainId, isConnected } = useWallet();
   const [gameAddress, setGameAddress] = React.useState<string>('');
+  const [hasJoined, setHasJoined] = React.useState<boolean>(false);
   const [phase, setPhase] = React.useState<number>(0);
   const [host, setHost] = React.useState<string>('');
   const [yourSeat1B, setYourSeat1B] = React.useState<number>(0);
@@ -78,9 +92,19 @@ export default function PlayerPage() {
         gameRO.seatOf(me),
         gameRO.cfg(),
       ]);
+
+      // Check if already joined this game
+      if (Number(seat1) > 0) {
+        // Already joined, just load the game
+        toast('Rejoining game...', 'muted');
+        setHasJoined(true);
+        await loadOnce();
+        return;
+      }
+
+      // Check if can join (new player)
       if (Number(p) !== 0) throw new Error('Not in Lobby phase, cannot join');
       if (String(h).toLowerCase() === me.toLowerCase()) throw new Error('Host cannot join the game');
-      if (Number(seat1) > 0) throw new Error('You have already joined this game');
 
       const game = new ethers.Contract(gameAddress, GAME_ABI, signer);
       const stake: bigint = BigInt(cfg.stake);
@@ -89,9 +113,49 @@ export default function PlayerPage() {
       await tx.wait();
 
       toast('Joined successfully!', 'ok');
+      // Save to localStorage
+      if (account) {
+        saveGameAddress(account, gameAddress);
+      }
+      setHasJoined(true);
       await loadOnce();
     } catch (e: any) { toast(e.message || String(e), 'err'); }
   };
+
+  // Verify if account has joined a game and load it
+  const verifyAndLoadGame = React.useCallback(async (gameAddr: string) => {
+    if (!provider || !account || !ethers.isAddress(gameAddr)) return;
+    
+    try {
+      const game = new ethers.Contract(gameAddr, GAME_ABI, provider);
+      const seat1 = Number(await game.seatOf(account));
+      
+      if (seat1 > 0) {
+        // Player has joined this game
+        setGameAddress(gameAddr);
+        setHasJoined(true);
+        toast('Restored previous game', 'ok');
+      } else {
+        // Not joined, clear saved address
+        localStorage.removeItem(getSavedGameKey(account));
+        toast('Saved game: You have not joined this game', 'muted');
+      }
+    } catch (e) {
+      // Game might not exist or invalid, clear saved address
+      localStorage.removeItem(getSavedGameKey(account));
+    }
+  }, [provider, account]);
+
+  // Auto-load saved game address when account is available
+  useEffect(() => {
+    if (account && !gameAddress && provider) {
+      const saved = loadGameAddress(account);
+      if (saved) {
+        // Verify if this account has joined the saved game
+        verifyAndLoadGame(saved);
+      }
+    }
+  }, [account, gameAddress, provider, verifyAndLoadGame]);
 
   const viewMyRole = async () => {
     try {
@@ -134,7 +198,8 @@ export default function PlayerPage() {
   const isLobby = phase === 0;
   const isHost = account && host && account.toLowerCase() === host.toLowerCase();
   const alreadyJoined = yourSeat1B > 0;
-  const canJoin = Boolean(canAct && isLobby && !isHost && !alreadyJoined);
+  // Allow joining if address is valid and wallet is connected - validation happens in join() function
+  const canJoin = Boolean(canAct);
 
   return (
     <main style={{ minHeight: '100dvh', background: '#f9fafb' }}>
@@ -160,51 +225,116 @@ export default function PlayerPage() {
           </div>
         )}
 
-        <div style={card}>
-          <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>Join Game</div>
-          <div style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>
-            Enter the game contract address to join an existing game.
-          </div>
-          <div style={{ display: 'grid', gap: 16 }}>
-            <div>
-              <input
-                placeholder="0x... contract address"
-                value={gameAddress}
-                onChange={(e) => setGameAddress(e.target.value.trim())}
-                style={input}
-              />
+        {!hasJoined ? (
+          <div style={card}>
+            <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>Join Game</div>
+            <div style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>
+              Enter the game contract address to join a new game or rejoin an existing one.
             </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button onClick={loadOnce} style={btn}>Load Config</button>
-              <button
-                onClick={join}
-                style={canJoin ? btn : btnDisabled}
-                disabled={!canJoin}
-                title={
-                  !canAct ? 'Please enter valid address and connect wallet' :
-                  !isLobby ? 'Not in Lobby phase' :
-                  isHost ? 'Host cannot join' :
-                  alreadyJoined ? 'Already joined' : ''
-                }
-              >
-                Join Game
-              </button>
-              <button onClick={viewMyRole} style={canAct ? btn : btnDisabled} disabled={!canAct}>View My Role</button>
-            </div>
-            {host && (
-              <div style={{ fontSize: 13, color: '#666', paddingTop: 8, borderTop: '1px solid #eee' }}>
-                Game Host: <span style={mono}>{host.slice(0, 10)}...{host.slice(-8)}</span>
+            <div style={{ display: 'grid', gap: 16 }}>
+              <div>
+                <input
+                  type="text"
+                  placeholder="0x... contract address"
+                  value={gameAddress}
+                  onChange={(e) => setGameAddress(e.target.value.trim())}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault(); // Prevent form submission or auto-trigger
+                    }
+                  }}
+                  autoComplete="off"
+                  autoFocus={false}
+                  style={input}
+                />
               </div>
-            )}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <button type="button" onClick={loadOnce} style={btn}>Load Config</button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (canJoin) {
+                      join();
+                    }
+                  }}
+                  style={canJoin ? btn : btnDisabled}
+                  disabled={!canJoin}
+                  title={
+                    !canAct ? 'Please enter valid address and connect wallet' : 'Click to join or rejoin the game'
+                  }
+                >
+                  Join/Rejoin Game
+                </button>
+                <button type="button" onClick={viewMyRole} style={canAct ? btn : btnDisabled} disabled={!canAct}>View My Role</button>
+                {account && loadGameAddress(account) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const saved = loadGameAddress(account);
+                      if (saved) {
+                        setGameAddress(saved);
+                        verifyAndLoadGame(saved);
+                      }
+                    }}
+                    style={btnPrimary}
+                  >
+                    Restore Previous Game
+                  </button>
+                )}
+              </div>
+              {host && (
+                <div style={{ fontSize: 13, color: '#666', paddingTop: 8, borderTop: '1px solid #eee' }}>
+                  Game Host: <span style={mono}>{host.slice(0, 10)}...{host.slice(-8)}</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-
-        {ethers.isAddress(gameAddress) && (
-          <GameHeader gameAddress={gameAddress} />
-        )}
-
-        {ethers.isAddress(gameAddress) && (
+        ) : (
           <>
+            {/* Game Info Card */}
+            <div style={card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                    Game Contract Address
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+                      fontSize: 16,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {gameAddress}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(gameAddress);
+                      toast('Address copied!', 'ok');
+                    }}
+                    style={btn}
+                  >
+                    Copy Address
+                  </button>
+                  <button
+                    onClick={() => {
+                      setGameAddress('');
+                      setHasJoined(false);
+                    }}
+                    style={btn}
+                  >
+                    Join New Game
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <GameHeader gameAddress={gameAddress} />
+
             {phase === 0 && (
               <div style={card}>
                 Current phase: <b>{PHASE_NAMES[phase]}</b>. Non-host players can join. Waiting for host to start and assign roles.
