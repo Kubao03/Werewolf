@@ -44,6 +44,53 @@ export const GAME_ABI = [
     { inputs: [], name: "resolveDay", outputs: [], stateMutability: "nonpayable", type: "function" },
     // hunter
     { inputs: [{ internalType: "uint8", name: "targetSeat", type: "uint8" }], name: "hunterShoot", outputs: [], stateMutability: "nonpayable", type: "function" },
+    
+    // -------- actions (host) --------
+    { inputs: [], name: "start", outputs: [], stateMutability: "nonpayable", type: "function" },
+    { inputs: [{ internalType: "uint8[]", name: "roles", type: "uint8[]" }], name: "assignRoles", outputs: [], stateMutability: "nonpayable", type: "function" },
+    
+    // -------- phase progression --------
+    { inputs: [], name: "advanceToNightReveal", outputs: [], stateMutability: "nonpayable", type: "function" },
+    { inputs: [], name: "advanceToNightResolve", outputs: [], stateMutability: "nonpayable", type: "function" },
+    { inputs: [], name: "resolveNight", outputs: [], stateMutability: "nonpayable", type: "function" },
+    
+    // -------- additional views --------
+    { inputs: [], name: "aliveWolves", outputs: [{ internalType: "uint32", name: "", type: "uint32" }], stateMutability: "view", type: "function" },
+    { inputs: [], name: "aliveNonWolves", outputs: [{ internalType: "uint32", name: "", type: "uint32" }], stateMutability: "view", type: "function" },
+  ] as const;
+  
+  // Factory ABI
+  export const FACTORY_ABI = [
+    {
+      inputs: [{
+        components: [
+          { internalType: "uint8", name: "minPlayers", type: "uint8" },
+          { internalType: "uint8", name: "maxPlayers", type: "uint8" },
+          { internalType: "uint8", name: "wolves", type: "uint8" },
+          { internalType: "uint256", name: "stake", type: "uint256" },
+          { internalType: "uint32", name: "tSetup", type: "uint32" },
+          { internalType: "uint32", name: "tNightCommit", type: "uint32" },
+          { internalType: "uint32", name: "tNightReveal", type: "uint32" },
+          { internalType: "uint32", name: "tDayVote", type: "uint32" },
+        ],
+        internalType: "struct WerewolfGame.GameConfig",
+        name: "cfg",
+        type: "tuple"
+      }],
+      name: "createGame",
+      outputs: [{ internalType: "address", name: "game", type: "address" }],
+      stateMutability: "nonpayable",
+      type: "function"
+    },
+    {
+      anonymous: false,
+      inputs: [
+        { indexed: true, internalType: "address", name: "game", type: "address" },
+        { indexed: true, internalType: "address", name: "host", type: "address" }
+      ],
+      name: "GameCreated",
+      type: "event"
+    }
   ] as const;
   
   export const PHASE_NAMES = [
