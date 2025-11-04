@@ -125,7 +125,10 @@ export default function PlayerPage() {
   const card: React.CSSProperties = { border: '1px solid #eee', borderRadius: 16, padding: 16, background: '#fafafa' };
   const btn: React.CSSProperties = { padding: '10px 14px', borderRadius: 12, border: '1px solid #ddd', background: '#fff', cursor: 'pointer' };
   const btnDisabled: React.CSSProperties = { ...btn, opacity: 0.6, cursor: 'not-allowed' };
+  const btnPrimary: React.CSSProperties = { ...btn, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none', fontWeight: 600 };
   const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' };
+  const input: React.CSSProperties = { padding: '10px 12px', borderRadius: 12, border: '1px solid #e3e3e8', width: '100%' };
+  const label: React.CSSProperties = { fontSize: 13, fontWeight: 600, marginBottom: 4 };
 
   const canAct = provider && ethers.isAddress(gameAddress);
   const isLobby = phase === 0;
@@ -134,10 +137,10 @@ export default function PlayerPage() {
   const canJoin = Boolean(canAct && isLobby && !isHost && !alreadyJoined);
 
   return (
-    <main style={{ minHeight: '100dvh' }}>
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: 24, display: 'grid', gap: 16 }}>
+    <main style={{ minHeight: '100dvh', background: '#f9fafb' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24, display: 'grid', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700 }}>🐺 Werewolf Game — Player</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 700 }}>🐺 Werewolf Game — Player Dashboard</h1>
           <Link href="/" style={{ ...btn, textDecoration: 'none' }}>← Home</Link>
         </div>
 
@@ -157,35 +160,41 @@ export default function PlayerPage() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gap: 8 }}>
-          <label style={{ fontWeight: 600 }}>WerewolfGame Contract Address</label>
-          <input
-            placeholder="0x... contract address"
-            value={gameAddress}
-            onChange={(e) => setGameAddress(e.target.value.trim())}
-            style={{ padding: '10px 12px', borderRadius: 12, border: '1px solid #e3e3e8' }}
-          />
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button onClick={loadOnce} style={btn}>Load Config</button>
-            <button
-              onClick={join}
-              style={canJoin ? btn : btnDisabled}
-              disabled={!canJoin}
-              title={
-                !canAct ? 'Please enter valid address and connect wallet' :
-                !isLobby ? 'Not in Lobby phase' :
-                isHost ? 'Host cannot join' :
-                alreadyJoined ? 'Already joined' : ''
-              }
-            >
-              Join Game
-            </button>
-            <button onClick={viewMyRole} style={canAct ? btn : btnDisabled} disabled={!canAct}>View My Role</button>
-
+        <div style={card}>
+          <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>Join Game</div>
+          <div style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>
+            Enter the game contract address to join an existing game.
+          </div>
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div>
+              <input
+                placeholder="0x... contract address"
+                value={gameAddress}
+                onChange={(e) => setGameAddress(e.target.value.trim())}
+                style={input}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button onClick={loadOnce} style={btn}>Load Config</button>
+              <button
+                onClick={join}
+                style={canJoin ? btn : btnDisabled}
+                disabled={!canJoin}
+                title={
+                  !canAct ? 'Please enter valid address and connect wallet' :
+                  !isLobby ? 'Not in Lobby phase' :
+                  isHost ? 'Host cannot join' :
+                  alreadyJoined ? 'Already joined' : ''
+                }
+              >
+                Join Game
+              </button>
+              <button onClick={viewMyRole} style={canAct ? btn : btnDisabled} disabled={!canAct}>View My Role</button>
+            </div>
             {host && (
-              <span style={{ marginLeft: 8, fontSize: 13, color: '#666' }}>
-                Host: <span style={mono}>{host.slice(0, 10)}...</span>
-              </span>
+              <div style={{ fontSize: 13, color: '#666', paddingTop: 8, borderTop: '1px solid #eee' }}>
+                Game Host: <span style={mono}>{host.slice(0, 10)}...{host.slice(-8)}</span>
+              </div>
             )}
           </div>
         </div>
@@ -254,10 +263,12 @@ export default function PlayerPage() {
           </div>
         )}
 
-        <p style={{ fontSize: 12, color: '#666' }}>
-          Join is only available in <span style={mono as any}>Lobby</span> phase and you must not be the <span style={mono as any}>host</span>.
-          Before game ends, <span style={mono as any}>roleOf</span> only allows querying your own role. Phase progression is controlled by the host.
-        </p>
+        <div style={{ ...card, background: '#f9fafb', border: '1px solid #e5e7eb', padding: 12 }}>
+          <p style={{ fontSize: 12, color: '#666', margin: 0, lineHeight: 1.6 }}>
+            <strong>Note:</strong> Join is only available in <span style={mono as any}>Lobby</span> phase and you must not be the <span style={mono as any}>host</span>.
+            Before game ends, <span style={mono as any}>roleOf</span> only allows querying your own role. Phase progression is controlled by the host.
+          </p>
+        </div>
       </div>
     </main>
   );
