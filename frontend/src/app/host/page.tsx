@@ -100,36 +100,7 @@ export default function HostPage() {
     }
   };
 
-  // Auto-load saved game address when account is available
-  useEffect(() => {
-    if (account && !gameAddress && provider) {
-      const saved = loadGameAddress(account);
-      if (saved) {
-        // Verify if this account is the host of the saved game
-        (async () => {
-          if (!ethers.isAddress(saved)) return;
-          
-          try {
-            const game = new ethers.Contract(saved, GAME_ABI, provider);
-            const host = await game.host();
-            
-            if (host.toLowerCase() === account.toLowerCase()) {
-              setGameAddress(saved);
-              toast('Restored previous game', 'ok');
-            } else {
-              // Not the host, clear saved address
-              localStorage.removeItem(getSavedGameKey(account));
-              toast('Saved game is not hosted by this account', 'muted');
-            }
-          } catch (e) {
-            // Game might not exist or invalid, clear saved address
-            localStorage.removeItem(getSavedGameKey(account));
-          }
-        })();
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, gameAddress, provider]);
+  // Auto-load functionality removed - user must manually restore game via "Restore Previous Game" button
 
   // Verify if account is the host of a game and load it
   const verifyAndLoadGame = async (gameAddr: string) => {

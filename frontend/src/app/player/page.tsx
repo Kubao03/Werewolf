@@ -122,40 +122,7 @@ export default function PlayerPage() {
     } catch (e: any) { toast(e.message || String(e), 'err'); }
   };
 
-  // Verify if account has joined a game and load it
-  const verifyAndLoadGame = React.useCallback(async (gameAddr: string) => {
-    if (!provider || !account || !ethers.isAddress(gameAddr)) return;
-    
-    try {
-      const game = new ethers.Contract(gameAddr, GAME_ABI, provider);
-      const seat1 = Number(await game.seatOf(account));
-      
-      if (seat1 > 0) {
-        // Player has joined this game
-        setGameAddress(gameAddr);
-        setHasJoined(true);
-        toast('Restored previous game', 'ok');
-      } else {
-        // Not joined, clear saved address
-        localStorage.removeItem(getSavedGameKey(account));
-        toast('Saved game: You have not joined this game', 'muted');
-      }
-    } catch (e) {
-      // Game might not exist or invalid, clear saved address
-      localStorage.removeItem(getSavedGameKey(account));
-    }
-  }, [provider, account]);
-
-  // Auto-load saved game address when account is available
-  useEffect(() => {
-    if (account && !gameAddress && provider) {
-      const saved = loadGameAddress(account);
-      if (saved) {
-        // Verify if this account has joined the saved game
-        verifyAndLoadGame(saved);
-      }
-    }
-  }, [account, gameAddress, provider, verifyAndLoadGame]);
+  // Auto-load functionality removed - user can use "Join/Rejoin Game" button to restore previous games
 
   const viewMyRole = async () => {
     try {
@@ -268,21 +235,6 @@ export default function PlayerPage() {
                   Join/Rejoin Game
                 </button>
                 <button type="button" onClick={viewMyRole} style={canAct ? btn : btnDisabled} disabled={!canAct}>View My Role</button>
-                {account && loadGameAddress(account) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const saved = loadGameAddress(account);
-                      if (saved) {
-                        setGameAddress(saved);
-                        verifyAndLoadGame(saved);
-                      }
-                    }}
-                    style={btnPrimary}
-                  >
-                    Restore Previous Game
-                  </button>
-                )}
               </div>
               {host && (
                 <div style={{ fontSize: 13, color: '#666', paddingTop: 8, borderTop: '1px solid #eee' }}>
