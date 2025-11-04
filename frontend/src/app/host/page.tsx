@@ -42,6 +42,7 @@ export default function HostPage() {
   const [message, setMessage] = useState<string>('');
   const [msgType, setMsgType] = useState<'ok' | 'err' | 'muted' | ''>('');
   const [showRoles, setShowRoles] = useState(false);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
   const toast = (s: string, t: 'ok' | 'err' | 'muted' | '' = '') => {
     setMessage(s);
@@ -311,47 +312,90 @@ export default function HostPage() {
                 </div>
               </div>
 
-              <div style={{ fontWeight: 600, marginTop: 8 }}>Time Limits (seconds)</div>
+              {/* Advanced Settings Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                style={{
+                  ...btn,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  marginTop: '8px',
+                  background: '#f5f5f5',
+                  border: '1px solid #e0e0e0',
+                }}
+              >
+                <span style={{ fontWeight: 600 }}>Time Limits (seconds)</span>
+                <span
+                  style={{
+                    transform: showAdvancedSettings ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.3s',
+                    fontSize: '18px',
+                  }}
+                >
+                  ▼
+                </span>
+              </button>
 
-              <div style={gridTwo}>
-                <div>
-                  <label style={label}>Setup Time</label>
-                  <input
-                    type="number"
-                    value={tSetup}
-                    onChange={(e) => setTSetup(e.target.value)}
-                    style={input}
-                  />
-                </div>
-                <div>
-                  <label style={label}>Night Commit</label>
-                  <input
-                    type="number"
-                    value={tNightCommit}
-                    onChange={(e) => setTNightCommit(e.target.value)}
-                    style={input}
-                  />
-                </div>
-              </div>
+              {/* Advanced Settings (Collapsible) */}
+              <div
+                style={{
+                  maxHeight: showAdvancedSettings ? '500px' : '0',
+                  overflow: 'hidden',
+                  transition: 'max-height 0.3s ease-out, opacity 0.3s ease-out',
+                  opacity: showAdvancedSettings ? 1 : 0,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 16,
+                    marginTop: 16,
+                  }}
+                >
+                  <div style={gridTwo}>
+                    <div>
+                      <label style={label}>Setup Time</label>
+                      <input
+                        type="number"
+                        value={tSetup}
+                        onChange={(e) => setTSetup(e.target.value)}
+                        style={input}
+                      />
+                    </div>
+                    <div>
+                      <label style={label}>Night Commit</label>
+                      <input
+                        type="number"
+                        value={tNightCommit}
+                        onChange={(e) => setTNightCommit(e.target.value)}
+                        style={input}
+                      />
+                    </div>
+                  </div>
 
-              <div style={gridTwo}>
-                <div>
-                  <label style={label}>Night Reveal</label>
-                  <input
-                    type="number"
-                    value={tNightReveal}
-                    onChange={(e) => setTNightReveal(e.target.value)}
-                    style={input}
-                  />
-                </div>
-                <div>
-                  <label style={label}>Day Vote</label>
-                  <input
-                    type="number"
-                    value={tDayVote}
-                    onChange={(e) => setTDayVote(e.target.value)}
-                    style={input}
-                  />
+                  <div style={gridTwo}>
+                    <div>
+                      <label style={label}>Night Reveal</label>
+                      <input
+                        type="number"
+                        value={tNightReveal}
+                        onChange={(e) => setTNightReveal(e.target.value)}
+                        style={input}
+                      />
+                    </div>
+                    <div>
+                      <label style={label}>Day Vote</label>
+                      <input
+                        type="number"
+                        value={tDayVote}
+                        onChange={(e) => setTDayVote(e.target.value)}
+                        style={input}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
