@@ -1,19 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import Link from 'next/link';
 import { useWallet } from '@/contexts/WalletContext';
-import { FACTORY_ABI } from '@/lib/gameAbi';
+import { FACTORY_ABI, GAME_ABI } from '@/lib/gameAbi';
 import GameHeader from '@/components/GameHeader';
 import PlayerList from '@/components/PlayerList';
 import HostControl from '@/components/HostControl';
+
+// Helper functions for localStorage
+const getSavedGameKey = (account: string) => `werewolf_host_game_${account.toLowerCase()}`;
+const saveGameAddress = (account: string, gameAddress: string) => {
+  if (account && ethers.isAddress(gameAddress)) {
+    localStorage.setItem(getSavedGameKey(account), gameAddress);
+  }
+};
+const loadGameAddress = (account: string): string | null => {
+  if (!account) return null;
+  const saved = localStorage.getItem(getSavedGameKey(account));
+  return saved && ethers.isAddress(saved) ? saved : null;
+};
 
 export default function HostPage() {
   const { provider, account, chainId, isConnected } = useWallet();
 
   const [factoryAddress, setFactoryAddress] = useState<string>('0xa8e551bf8af07583f1492c4596dae296d1636e98');
   const [gameAddress, setGameAddress] = useState<string>('');
+  const [manualGameAddress, setManualGameAddress] = useState<string>('');
 
   // Game configuration
   const [minPlayers, setMinPlayers] = useState('4');
@@ -72,6 +86,10 @@ export default function HostPage() {
       if (event) {
         const newGameAddress = event.args.game;
         setGameAddress(newGameAddress);
+        // Save to localStorage
+        if (account) {
+          saveGameAddress(account, newGameAddress);
+        }
         toast(`Game created at: ${newGameAddress}`, 'ok');
       } else {
         toast('Game created, but could not find address in events', 'err');
@@ -79,6 +97,68 @@ export default function HostPage() {
     } catch (e: any) {
       toast(e.message || String(e), 'err');
     }
+  };
+
+  // Auto-load saved game address when account is available
+  useEffect(() => {
+    if (account && !gameAddress && provider) {
+      const saved = loadGameAddress(account);
+      if (saved) {
+        // Verify if this account is the host of the saved game
+        (async () => {
+          if (!ethers.isAddress(saved)) return;
+          
+          try {
+            const game = new ethers.Contract(saved, GAME_ABI, provider);
+            const host = await game.host();
+            
+            if (host.toLowerCase() === account.toLowerCase()) {
+              setGameAddress(saved);
+              toast('Restored previous game', 'ok');
+            } else {
+              // Not the host, clear saved address
+              localStorage.removeItem(getSavedGameKey(account));
+              toast('Saved game is not hosted by this account', 'muted');
+            }
+          } catch (e) {
+            // Game might not exist or invalid, clear saved address
+            localStorage.removeItem(getSavedGameKey(account));
+          }
+        })();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account, gameAddress, provider]);
+
+  // Verify if account is the host of a game and load it
+  const verifyAndLoadGame = async (gameAddr: string) => {
+    if (!provider || !account || !ethers.isAddress(gameAddr)) return;
+    
+    try {
+      const game = new ethers.Contract(gameAddr, GAME_ABI, provider);
+      const host = await game.host();
+      
+      if (host.toLowerCase() === account.toLowerCase()) {
+        setGameAddress(gameAddr);
+        toast('Restored previous game', 'ok');
+      } else {
+        // Not the host, clear saved address
+        localStorage.removeItem(getSavedGameKey(account));
+        toast('Saved game is not hosted by this account', 'muted');
+      }
+    } catch (e) {
+      // Game might not exist or invalid, clear saved address
+      localStorage.removeItem(getSavedGameKey(account));
+    }
+  };
+
+  // Manual restore game
+  const restoreGame = async () => {
+    if (!manualGameAddress || !ethers.isAddress(manualGameAddress)) {
+      toast('Please enter a valid game address', 'err');
+      return;
+    }
+    await verifyAndLoadGame(manualGameAddress);
   };
 
   const card: React.CSSProperties = {
@@ -150,10 +230,33 @@ export default function HostPage() {
         )}
 
         {!gameAddress ? (
-          <div style={card}>
-            <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>
-              Create New Game
+          <>
+            {/* Restore Previous Game */}
+            <div style={card}>
+              <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>
+                Restore Previous Game
+              </div>
+              <div style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>
+                Enter a game address to restore management of a game you previously created.
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  placeholder="0x... Game contract address"
+                  value={manualGameAddress}
+                  onChange={(e) => setManualGameAddress(e.target.value.trim())}
+                  style={input}
+                />
+                <button onClick={restoreGame} style={btnPrimary}>
+                  Restore Game
+                </button>
+              </div>
             </div>
+
+            {/* Create New Game */}
+            <div style={card}>
+              <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>
+                Create New Game
+              </div>
 
             <div style={{ display: 'grid', gap: 16 }}>
               <div>
@@ -256,12 +359,13 @@ export default function HostPage() {
                 Create Game
               </button>
             </div>
-          </div>
+            </div>
+          </>
         ) : (
           <>
             <div style={card}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
                     Game Contract Address
                   </div>
@@ -275,15 +379,26 @@ export default function HostPage() {
                     {gameAddress}
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(gameAddress);
-                    toast('Address copied!', 'ok');
-                  }}
-                  style={btn}
-                >
-                  Copy Address
-                </button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(gameAddress);
+                      toast('Address copied!', 'ok');
+                    }}
+                    style={btn}
+                  >
+                    Copy Address
+                  </button>
+                  <button
+                    onClick={() => {
+                      setGameAddress('');
+                      setManualGameAddress('');
+                    }}
+                    style={btn}
+                  >
+                    Create New Game
+                  </button>
+                </div>
               </div>
             </div>
 
