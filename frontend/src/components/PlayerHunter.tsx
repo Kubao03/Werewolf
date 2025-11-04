@@ -64,9 +64,14 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
       try {
         await provider.send('eth_requestAccounts', []);
         const s = await provider.getSigner();
-        setAccount(await s.getAddress());
-      } finally {
-        refresh();
+        const addr = await s.getAddress();
+        setAccount(addr);
+        // Refresh immediately after account is set
+        if (gameRO) {
+          await refresh();
+        }
+      } catch (e) {
+        console.warn('Failed to get account:', e);
       }
     })();
 
@@ -106,49 +111,88 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
   };
 
   // Styles（inline）
-  const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 12, padding: 12 };
-  const row: React.CSSProperties = { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' };
-  const inputStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid #e3e3e8', borderRadius: 10 };
-  const btn: React.CSSProperties = { padding: '8px 12px', border: '1px solid #ddd', borderRadius: 10, background: '#fff', cursor: 'pointer' };
+  const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 16, padding: 16, background: '#fafafa' };
+  const row: React.CSSProperties = { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' };
+  const inputStyle: React.CSSProperties = { 
+    padding: '10px 12px', 
+    border: '1px solid #e3e3e8', 
+    borderRadius: 12, 
+    fontSize: 14,
+    background: '#fff',
+    width: 'auto',
+    minWidth: 120
+  };
+  const btn: React.CSSProperties = { 
+    padding: '10px 14px', 
+    border: '1px solid #ddd', 
+    borderRadius: 12, 
+    background: '#fff', 
+    cursor: 'pointer',
+    fontSize: 14,
+    fontWeight: 500
+  };
+  const btnPrimary: React.CSSProperties = {
+    ...btn,
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    border: 'none',
+    fontWeight: 600
+  };
   const btnDisabled: React.CSSProperties = { ...btn, opacity: 0.6, cursor: 'not-allowed' };
   const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' };
 
   return (
     <div style={section}>
-      <div style={{ fontWeight: 600, marginBottom: 8 }}>Hunter's Shot</div>
+      <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 12 }}>Hunter's Shot</div>
 
-      <div style={{ marginBottom: 6, fontSize: 13, color: '#444' }}>
-        Your seat(1-based)：<span style={mono}>{yourSeat1B || 'Not joined'}</span>，
-        Current hunter seat(1-based)：<span style={mono}>{hunterToShoot1B || 'None'}</span>
+      <div style={{ marginBottom: 16, fontSize: 13, color: '#666', padding: 12, background: '#f9fafb', borderRadius: 8 }}>
+        <div style={{ marginBottom: 8 }}>
+          Your seat (1-based): <span style={mono}>{yourSeat1B || 'Not joined'}</span>
+        </div>
+        <div>
+          Current hunter seat (1-based): <span style={mono}>{hunterToShoot1B || 'None'}</span>
+        </div>
       </div>
 
       <div style={row}>
         <input
-          placeholder="target seat（0-based）"
+          placeholder="Target seat (0-based)"
           value={target}
           onChange={(e) => setTarget(Number(e.target.value) || 0)}
           style={inputStyle}
         />
-        <button onClick={shoot} style={canShoot ? btn : btnDisabled} disabled={!canShoot}>
-          hunterShoot
+        <button onClick={shoot} style={canShoot ? btnPrimary : btnDisabled} disabled={!canShoot}>
+          Hunter Shoot
         </button>
       </div>
 
       {/* Alive overview (optional) */}
       {seatsCount > 0 && (
-        <div style={{ marginTop: 10, fontSize: 13 }}>
-          Alive overview:
-          <span style={{ marginLeft: 6 }}>
+        <div style={{ marginTop: 16, fontSize: 13, color: '#666', padding: 12, background: '#f9fafb', borderRadius: 8 }}>
+          <div style={{ marginBottom: 8, fontWeight: 600 }}>Alive Overview:</div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {alive.map((a, i) => (
-              <span key={i} style={{ marginRight: 8 }}>
-                #{i}:{a ? '🟢' : '⚫️'}
+              <span key={i} style={{ padding: '4px 8px', background: a ? '#f0fdf4' : '#fef2f2', borderRadius: 6 }}>
+                #{i}: {a ? <span style={{ color: '#065f46' }}>🟢</span> : <span style={{ color: '#666' }}>⚫️</span>}
               </span>
             ))}
-          </span>
+          </div>
         </div>
       )}
 
-      {status && <div style={{ marginTop: 8, border: '1px solid #eee', borderRadius: 10, padding: 10 }}>{status}</div>}
+      {status && (
+        <div style={{ 
+          marginTop: 16, 
+          border: '1px solid #e5e7eb', 
+          borderRadius: 12, 
+          padding: 12,
+          background: '#f9fafb',
+          fontSize: 14,
+          color: '#333'
+        }}>
+          {status}
+        </div>
+      )}
     </div>
   );
 }

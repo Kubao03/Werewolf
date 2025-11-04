@@ -78,9 +78,14 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
       try {
         await provider.send('eth_requestAccounts', []);
         const s = await provider.getSigner();
-        setAccount(await s.getAddress());
-      } finally {
-        refresh();
+        const addr = await s.getAddress();
+        setAccount(addr);
+        // Refresh immediately after account is set
+        if (game) {
+          await refresh();
+        }
+      } catch (e) {
+        console.warn('Failed to get account:', e);
       }
     })();
     const t = setInterval(refresh, 5000);
@@ -133,10 +138,33 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
   };
 
   // Styles（inline）
-  const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 12, padding: 12 };
-  const row: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' };
-  const inputStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid #e3e3e8', borderRadius: 10 };
-  const btn: React.CSSProperties = { padding: '8px 12px', border: '1px solid #ddd', borderRadius: 10, background: '#fff', cursor: 'pointer' };
+  const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 16, padding: 16, background: '#fafafa' };
+  const row: React.CSSProperties = { display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' };
+  const inputStyle: React.CSSProperties = { 
+    padding: '10px 12px', 
+    border: '1px solid #e3e3e8', 
+    borderRadius: 12, 
+    fontSize: 14,
+    background: '#fff',
+    width: 'auto',
+    minWidth: 120
+  };
+  const btn: React.CSSProperties = { 
+    padding: '10px 14px', 
+    border: '1px solid #ddd', 
+    borderRadius: 12, 
+    background: '#fff', 
+    cursor: 'pointer',
+    fontSize: 14,
+    fontWeight: 500
+  };
+  const btnPrimary: React.CSSProperties = {
+    ...btn,
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    border: 'none',
+    fontWeight: 600
+  };
   const btnDisabled: React.CSSProperties = { ...btn, opacity: 0.6, cursor: 'not-allowed' };
   const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' };
 
@@ -146,19 +174,19 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
       : '';
 
   return (
-    <div style={{ display: 'grid', gap: 12 }}>
+    <div style={{ display: 'grid', gap: 16 }}>
       <div style={section}>
-        <div style={{ fontWeight: 600, marginBottom: 8 }}>Day Voting</div>
+        <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 12 }}>Day Voting</div>
         <div style={row}>
           <input
-            placeholder="target seat"
+            placeholder="Target seat (0-based)"
             value={voteTarget}
             onChange={(e) => setVoteTarget(Number(e.target.value) || 0)}
             style={inputStyle}
           />
           <button
             onClick={doVote}
-            style={youAlive ? btn : btnDisabled}
+            style={youAlive ? btnPrimary : btnDisabled}
             disabled={!youAlive}
             title={youAlive ? '' : 'Only alive players can vote'}
           >
@@ -171,29 +199,48 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
           </button>
         </div>
 
-        <div style={{ marginTop: 6, fontSize: 13, color: '#666' }}>
-          Your seat(1-based)：<span style={mono}>{yourSeat1Based || 'Not joined'}</span>，
-          Status:{youAlive ? '🟢 Alive' : '⚫️ Cannot vote'}
-          {deadTargetWarning && <span style={{ marginLeft: 8, color: '#b45309' }}>{deadTargetWarning}</span>}
+        <div style={{ marginTop: 16, fontSize: 13, color: '#666', padding: 12, background: '#f9fafb', borderRadius: 8 }}>
+          <div style={{ marginBottom: 8 }}>
+            Your seat (1-based): <span style={mono}>{yourSeat1Based || 'Not joined'}</span>
+          </div>
+          <div>
+            Status: {youAlive ? <span style={{ color: '#065f46', fontWeight: 600 }}>🟢 Alive</span> : <span style={{ color: '#666' }}>⚫️ Cannot vote</span>}
+          </div>
+          {deadTargetWarning && (
+            <div style={{ marginTop: 8, color: '#b45309', fontSize: 12 }}>
+              ⚠️ {deadTargetWarning}
+            </div>
+          )}
         </div>
 
         {host && (
-          <div style={{ marginTop: 6, fontSize: 12, color: '#666' }}>
-            Game host:<span style={mono}>{host}</span>
+          <div style={{ marginTop: 12, fontSize: 13, color: '#666', paddingTop: 12, borderTop: '1px solid #eee' }}>
+            Game host: <span style={mono}>{host}</span>
           </div>
         )}
       </div>
 
       <div style={section}>
-        <div style={{ fontWeight: 600, marginBottom: 8 }}>Vote Tally</div>
-        <div style={{ display: 'grid', gap: 6 }}>
+        <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 12 }}>Vote Tally</div>
+        <div style={{ display: 'grid', gap: 8 }}>
           {[...Array(seatsCount)].map((_, i) => (
-            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <div># {i}</div>
-              <div>{alive[i] ? '🟢 alive' : '⚫️ dead'}</div>
-              <div>votes: <b>{tally[i] || 0}</b></div>
+            <div 
+              key={i} 
+              style={{ 
+                display: 'flex', 
+                gap: 16, 
+                alignItems: 'center',
+                padding: '10px 12px',
+                background: leader.idx === i && leader.votes > 0 ? '#f0fdf4' : '#fff',
+                borderRadius: 8,
+                border: leader.idx === i && leader.votes > 0 ? '1px solid #86efac' : '1px solid #eee'
+              }}
+            >
+              <div style={{ fontWeight: 600, minWidth: 40 }}>#{i}</div>
+              <div style={{ minWidth: 80 }}>{alive[i] ? <span style={{ color: '#065f46' }}>🟢 Alive</span> : <span style={{ color: '#666' }}>⚫️ Dead</span>}</div>
+              <div style={{ minWidth: 80 }}>Votes: <b style={{ fontSize: 16 }}>{tally[i] || 0}</b></div>
               {leader.idx === i && leader.votes > 0 && (
-                <div style={{ color: '#065f46' }}>← Current leader</div>
+                <div style={{ color: '#065f46', fontWeight: 600 }}>← Current Leader</div>
               )}
             </div>
           ))}
@@ -201,7 +248,14 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
       </div>
 
       {status && (
-        <div style={{ border: '1px solid #eee', padding: 10, borderRadius: 12 }}>
+        <div style={{ 
+          border: '1px solid #e5e7eb', 
+          padding: 12, 
+          borderRadius: 12, 
+          background: '#f9fafb',
+          fontSize: 14,
+          color: '#333'
+        }}>
           {status}
         </div>
       )}

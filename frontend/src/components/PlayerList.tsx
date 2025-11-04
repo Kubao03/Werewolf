@@ -31,15 +31,9 @@ export default function PlayerList({ gameAddress, provider, showRoles = false }:
       const playersList: Player[] = [];
       for (let i = 0; i < count; i++) {
         const seat = await game.seats(i);
-        let role = null;
-        
-        if (showRoles) {
-          try {
-            role = Number(await game.roleOf(seat.player));
-          } catch {
-            // Role not visible yet
-          }
-        }
+        // Role is already included in the seat struct from the contract
+        // We can read it directly without needing roleOf() function
+        const role = showRoles ? Number(seat.role) : null;
         
         playersList.push({
           address: String(seat.player),

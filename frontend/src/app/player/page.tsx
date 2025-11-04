@@ -54,6 +54,10 @@ export default function PlayerPage() {
         if (seat1 > 0) {
           setHasJoined(true);
         }
+        // If player has joined (seat1 > 0), automatically set hasJoined to true
+        if (seat1 > 0) {
+          setHasJoined(true);
+        }
       }
       toast('Game info loaded.', 'ok');
     } catch (e: any) { toast(e.message || String(e), 'err'); }
@@ -71,12 +75,16 @@ export default function PlayerPage() {
         if (account) {
           const seat1 = Number(await game.seatOf(account));
           setYourSeat1B(seat1);
-          // If player has joined (seat1 > 0), automatically set hasJoined to true
-          if (seat1 > 0 && !hasJoined) {
+          // Update hasJoined based on seat1 status
+          if (seat1 > 0) {
             setHasJoined(true);
+          } else {
+            // If seat1 becomes 0 (player left game), reset hasJoined
+            setHasJoined(false);
           }
         } else {
           setYourSeat1B(0);
+          setHasJoined(false);
         }
       } catch { /* ignore */ }
       timer = setTimeout(loop, 3000);
@@ -215,7 +223,7 @@ export default function PlayerPage() {
                 </button>
               </div>
               {host && (
-                <div style={{ fontSize: 13, color: '#666', paddingTop: 8, borderTop: '1px solid #eee' }}>
+                <div style={{ fontSize: 13, color: '#666', paddingTop: 12, marginTop: 12, borderTop: '1px solid #eee' }}>
                   Game Host: <span style={mono}>{host.slice(0, 10)}...{host.slice(-8)}</span>
                 </div>
               )}
@@ -267,7 +275,9 @@ export default function PlayerPage() {
 
             {phase === 0 && (
               <div style={card}>
-                Current phase: <b>{PHASE_NAMES[phase]}</b>. Non-host players can join. Waiting for host to start and assign roles.
+                <div style={{ fontSize: 14, color: '#666' }}>
+                  Current phase: <b>{PHASE_NAMES[phase]}</b>. Non-host players can join. Waiting for host to start and assign roles.
+                </div>
               </div>
             )}
 
@@ -301,7 +311,9 @@ export default function PlayerPage() {
 
             {[1, 4].includes(phase) && (
               <div style={card}>
-                Current phase: <b>{PHASE_NAMES[phase]}</b> (read-only). Phase progression is controlled by <span style={{ fontWeight: 600 }}>host</span>.
+                <div style={{ fontSize: 14, color: '#666' }}>
+                  Current phase: <b>{PHASE_NAMES[phase]}</b> (read-only). Phase progression is controlled by <span style={{ fontWeight: 600 }}>host</span>.
+                </div>
               </div>
             )}
           </>
@@ -324,7 +336,7 @@ export default function PlayerPage() {
         )}
 
         <div style={{ ...card, background: '#f9fafb', border: '1px solid #e5e7eb', padding: 12 }}>
-          <p style={{ fontSize: 12, color: '#666', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 13, color: '#666', margin: 0, lineHeight: 1.6 }}>
             <strong>Note:</strong> Join is only available in <span style={mono as any}>Lobby</span> phase and you must not be the <span style={mono as any}>host</span>.
             Before game ends, <span style={mono as any}>roleOf</span> only allows querying your own role. Phase progression is controlled by the host.
           </p>

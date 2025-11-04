@@ -60,13 +60,23 @@ export default function GameHeader({ gameAddress }: { gameAddress: string }) {
   };
 
   return (
-    <div style={{ border: '1px solid #eee', borderRadius: 16, padding: 16, marginBottom: 12, background: '#fafafa' }}>
-      <div style={{ fontWeight: 700, marginBottom: 6 }}>
-        Game Address: <span style={mono}>{gameAddress}</span>
+    <div style={{ border: '1px solid #eee', borderRadius: 16, padding: 16, background: '#fafafa' }}>
+      <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+        Game Address
+      </div>
+      <div
+        style={{
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+          fontSize: 16,
+          fontWeight: 600,
+          marginBottom: 12,
+        }}
+      >
+        {gameAddress}
       </div>
 
-      <div style={{ fontSize: 14 }}>
-        phase：<b>{PHASE_NAMES[phase] ?? phase}</b>
+      <div style={{ fontSize: 14, color: '#333', marginBottom: 8 }}>
+        phase: <b>{PHASE_NAMES[phase] ?? phase}</b>
         {dayCount > 0 && (
           <>
             <span style={{ margin: '0 8px' }}>|</span>
@@ -76,15 +86,13 @@ export default function GameHeader({ gameAddress }: { gameAddress: string }) {
       </div>
 
       {cfg && (
-        <div style={{ fontSize: 13, marginTop: 6 }}>
-          min/max：{Number(cfg.minPlayers)}/{Number(cfg.maxPlayers)}；
-          wolves：{Number(cfg.wolves)}；
-          stake：{ethers.formatEther(cfg.stake)} ETH
+        <div style={{ fontSize: 13, color: '#666', marginTop: 6 }}>
+          min/max: {Number(cfg.minPlayers)}/{Number(cfg.maxPlayers)}; wolves: {Number(cfg.wolves)}; stake: {ethers.formatEther(cfg.stake)} ETH
         </div>
       )}
 
       {host && (
-        <div style={{ fontSize: 13, marginTop: 6 }}>
+        <div style={{ fontSize: 13, color: '#666', marginTop: 6 }}>
           Host: <span style={mono}>{host}</span> (Phase progression controlled by host)
         </div>
       )}

@@ -374,19 +374,44 @@ export default function PlayerNight({ gameAddress }: { gameAddress: string }) {
 
   // —— Top identity display —— //
   let identityText = '(Loading/invisible)';
-  if (!joined) identityText = '（Not joined）';
+  if (!joined) identityText = '(Not joined)';
   else if (phase < 2 || Number(dayCount) === 0) identityText = '(Identity not assigned)';
   else identityText = myRole != null ? ROLE_NAMES[myRole] : '(Loading)';
 
   // Styles
-  const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 12, padding: 12 };
-  const row: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' };
-  const inputStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid #e3e3e8', borderRadius: 10 };
-  const btn: React.CSSProperties = { padding: '8px 12px', border: '1px solid #ddd', borderRadius: 10, background: '#fff', cursor: 'pointer' };
+  const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 16, padding: 16, background: '#fafafa' };
+  const row: React.CSSProperties = { display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' };
+  const inputStyle: React.CSSProperties = { 
+    padding: '10px 12px', 
+    border: '1px solid #e3e3e8', 
+    borderRadius: 12, 
+    fontSize: 14,
+    background: '#fff',
+    width: 'auto',
+    minWidth: 120
+  };
+  const btn: React.CSSProperties = { 
+    padding: '10px 14px', 
+    border: '1px solid #ddd', 
+    borderRadius: 12, 
+    background: '#fff', 
+    cursor: 'pointer',
+    fontSize: 14,
+    fontWeight: 500
+  };
+  const btnPrimary: React.CSSProperties = {
+    ...btn,
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    border: 'none',
+    fontWeight: 600
+  };
 
   return (
-    <div style={{ display: 'grid', gap: 12 }}>
-      <div>My identity:<b>{identityText}</b></div>
+    <div style={{ display: 'grid', gap: 16 }}>
+      <div style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>
+        My identity: <span style={{ fontWeight: 600, color: '#333' }}>{identityText}</span>
+      </div>
 
       {/* NightCommit */}
       {phase === 2 && (
@@ -396,25 +421,25 @@ export default function PlayerNight({ gameAddress }: { gameAddress: string }) {
           {/* Wolf: Must be joined and actually wolf */}
           {joined && isWolf && (
             <>
-              <div>Wolf commit:</div>
+              <div style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>Wolf commit:</div>
               <div style={row}>
                 <input
-                  placeholder="target seat (uint8, 0-based)"
+                  placeholder="Target seat (0-based)"
                   value={commitTarget}
                   onChange={(e) => setCommitTarget(Number(e.target.value) || 0)}
                   style={inputStyle}
                 />
                 <input
-                  placeholder="salt 0x..(32 bytes) leave empty to auto-generate"
+                  placeholder="Salt (0x...32 bytes, leave empty to auto-generate)"
                   value={salt}
                   onChange={(e) => setSalt(e.target.value)}
-                  style={{ ...inputStyle, minWidth: 280 }}
+                  style={{ ...inputStyle, minWidth: 300 }}
                 />
-                <button onClick={doWolfCommit} style={btn}>Submit commit</button>
+                <button onClick={doWolfCommit} style={btnPrimary}>Submit Commit</button>
               </div>
               {committedTarget != null && (
-                <div style={{ marginTop: 6, fontSize: 12, color: '#444' }}>
-                  Commit target recorded this night:#<b>{committedTarget}</b>(will auto-use in reveal phase)
+                <div style={{ marginTop: 12, fontSize: 13, color: '#065f46', padding: 10, background: '#f0fdf4', borderRadius: 8, border: '1px solid #86efac' }}>
+                  ✓ Commit target recorded this night: <b>#{committedTarget}</b> (will auto-use in reveal phase)
                 </div>
               )}
             </>
@@ -423,19 +448,19 @@ export default function PlayerNight({ gameAddress }: { gameAddress: string }) {
           {/* Seer：Must be joined and actuallySeer */}
           {joined && isSeer && (
             <>
-              <div style={{ marginTop: 10 }}>SeerCheck:</div>
+              <div style={{ fontSize: 14, color: '#666', marginBottom: 12, marginTop: joined && isWolf ? 16 : 0 }}>Seer Check:</div>
               <div style={row}>
                 <input
-                  placeholder="target seat (uint8)"
+                  placeholder="Target seat (0-based)"
                   value={seerTarget}
                   onChange={(e) => setSeerTarget(Number(e.target.value) || 0)}
                   style={inputStyle}
                 />
-                <button onClick={doSeer} style={btn}>seerCheck</button>
+                <button onClick={doSeer} style={btnPrimary}>Seer Check</button>
               </div>
               {(seerLastSeat != null) && (
-                <div style={{ marginTop: 8, fontSize: 13, color: '#065f46' }}>
-                  Latest check this night:#{seerLastSeat} → <b>{seerLastFaction === 1 ? 'Wolf faction' : 'Villager faction'}</b>
+                <div style={{ marginTop: 12, fontSize: 13, color: '#065f46', padding: 10, background: '#f0fdf4', borderRadius: 8, border: '1px solid #86efac' }}>
+                  ✓ Latest check this night: <b>#{seerLastSeat}</b> → <b>{seerLastFaction === 1 ? 'Wolf faction' : 'Villager faction'}</b>
                 </div>
               )}
             </>
@@ -443,7 +468,9 @@ export default function PlayerNight({ gameAddress }: { gameAddress: string }) {
 
           {/* Fallback: Not joined or not wolf/seer */}
           {(!joined || (!isWolf && !isSeer)) && (
-            <div style={{ marginTop: 8, color: '#666' }}>You have no actions in this phase, please wait for host to advance.</div>
+            <div style={{ marginTop: 12, fontSize: 14, color: '#666', padding: 12, background: '#f9fafb', borderRadius: 8 }}>
+              You have no actions in this phase. Please wait for host to advance.
+            </div>
           )}
         </div>
       )}
@@ -455,18 +482,20 @@ export default function PlayerNight({ gameAddress }: { gameAddress: string }) {
 
           {joined && isWolf ? (
             <>
-              <div>Wolf reveal (auto):</div>
+              <div style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>Wolf reveal (auto):</div>
               <div style={row}>
-                <button onClick={doWolfRevealAuto} style={btn}>Submit reveal (auto-use target consistent with commit)</button>
+                <button onClick={doWolfRevealAuto} style={btnPrimary}>Submit Reveal (Auto-use target from commit)</button>
               </div>
               {committedTarget != null && (
-                <div style={{ marginTop: 6, fontSize: 12, color: '#444' }}>
-                  Recorded commit target:#<b>{committedTarget}</b>
+                <div style={{ marginTop: 12, fontSize: 13, color: '#065f46', padding: 10, background: '#f0fdf4', borderRadius: 8, border: '1px solid #86efac' }}>
+                  ✓ Recorded commit target: <b>#{committedTarget}</b>
                 </div>
               )}
             </>
           ) : (
-            <div style={{ color: '#666' }}>Not wolf or not joined, no actions in this phase. Please wait for host to advance.</div>
+            <div style={{ fontSize: 14, color: '#666', padding: 12, background: '#f9fafb', borderRadius: 8 }}>
+              Not wolf or not joined. No actions in this phase. Please wait for host to advance.
+            </div>
           )}
         </div>
       )}
@@ -478,28 +507,32 @@ export default function PlayerNight({ gameAddress }: { gameAddress: string }) {
 
           {joined && isWitch ? (
             <>
-              <div style={{ marginBottom: 8, fontSize: 13 }}>
-                Tonight wolf kill:{victimThisNight === 255 ? <b>(none / unknown)</b> : <>#<b>{victimThisNight}</b>（{victimAlive ? 'Still alive, can be saved' : 'Dead or unknown'}）</>}
-                <span style={{ marginLeft: 10 }}>
-                  Antidote:<b>{hasAnti ? 'yes' : 'None'}</b>；Poison:<b>{hasPois ? 'yes' : 'None'}</b>；Used this night:<b>{nightUsed ? 'yes' : 'no'}</b>
-                </span>
+              <div style={{ marginBottom: 16, fontSize: 13, color: '#666', padding: 12, background: '#f9fafb', borderRadius: 8 }}>
+                <div style={{ marginBottom: 8 }}>
+                  Tonight wolf kill: {victimThisNight === 255 ? <b>(none / unknown)</b> : <>#<b>{victimThisNight}</b> ({victimAlive ? 'Still alive, can be saved' : 'Dead or unknown'})</>}
+                </div>
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                  <span>Antidote: <b style={{ color: hasAnti ? '#065f46' : '#666' }}>{hasAnti ? 'Yes' : 'None'}</b></span>
+                  <span>Poison: <b style={{ color: hasPois ? '#065f46' : '#666' }}>{hasPois ? 'Yes' : 'None'}</b></span>
+                  <span>Used this night: <b style={{ color: nightUsed ? '#dc2626' : '#666' }}>{nightUsed ? 'Yes' : 'No'}</b></span>
+                </div>
               </div>
 
               <div style={row}>
-                <select value={witchAction} onChange={(e) => setWitchAction(Number(e.target.value))} style={inputStyle}>
-                  <option value={0}>skip(0)</option>
-                  <option value={1}>save(1)</option>
-                  <option value={2}>poison(2)</option>
+                <select value={witchAction} onChange={(e) => setWitchAction(Number(e.target.value))} style={{ ...inputStyle, minWidth: 140 }}>
+                  <option value={0}>Skip (0)</option>
+                  <option value={1}>Save (1)</option>
+                  <option value={2}>Poison (2)</option>
                 </select>
                 <input
-                  placeholder="target seat(only needed for poison)"
+                  placeholder="Target seat (only needed for poison)"
                   value={witchTarget}
                   onChange={(e) => setWitchTarget(Number(e.target.value) || 0)}
                   style={inputStyle}
                 />
                 <button
                   onClick={doWitch}
-                  style={btn}
+                  style={btnPrimary}
                   disabled={
                     nightUsed ||
                     (witchAction === 1 && (!hasAnti || !(victimThisNight >= 0 && victimThisNight < seatsCount))) ||
@@ -512,17 +545,30 @@ export default function PlayerNight({ gameAddress }: { gameAddress: string }) {
                     (witchAction === 2 && !hasPois) ? 'No poison' : ''
                   }
                 >
-                  witchAct
+                  Witch Act
                 </button>
               </div>
             </>
           ) : (
-            <div style={{ color: '#666' }}>Not witch or not joined, no actions in this phase. Please wait for host to advance.</div>
+            <div style={{ fontSize: 14, color: '#666', padding: 12, background: '#f9fafb', borderRadius: 8 }}>
+              Not witch or not joined. No actions in this phase. Please wait for host to advance.
+            </div>
           )}
         </div>
       )}
 
-      {status && <div style={{ border: '1px solid #eee', padding: 10, borderRadius: 12 }}>{status}</div>}
+      {status && (
+        <div style={{ 
+          border: '1px solid #e5e7eb', 
+          padding: 12, 
+          borderRadius: 12, 
+          background: '#f9fafb',
+          fontSize: 14,
+          color: '#333'
+        }}>
+          {status}
+        </div>
+      )}
     </div>
   );
 }
