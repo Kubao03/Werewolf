@@ -10,7 +10,7 @@ return eth ? new ethers.BrowserProvider(eth) : null;
 
 export async function getSignerRequired(): Promise<ethers.Signer> {
 const provider = getBrowserProvider();
-if (!provider) throw new Error('请先安装并连接 MetaMask');
+if (!provider) throw new Error('Please install and connect MetaMask first');
 await provider.send('eth_requestAccounts', []);
 return provider.getSigner();
 }

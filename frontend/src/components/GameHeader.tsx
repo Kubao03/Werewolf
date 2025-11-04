@@ -62,7 +62,7 @@ export default function GameHeader({ gameAddress }: { gameAddress: string }) {
   return (
     <div style={{ border: '1px solid #eee', borderRadius: 16, padding: 16, marginBottom: 12, background: '#fafafa' }}>
       <div style={{ fontWeight: 700, marginBottom: 6 }}>
-        游戏地址：<span style={mono}>{gameAddress}</span>
+        Game Address: <span style={mono}>{gameAddress}</span>
       </div>
 
       <div style={{ fontSize: 14 }}>
@@ -70,7 +70,7 @@ export default function GameHeader({ gameAddress }: { gameAddress: string }) {
         {dayCount > 0 && (
           <>
             <span style={{ margin: '0 8px' }}>|</span>
-            当前天数：<span style={mono}>{dayCount}</span>
+            Current Day: <span style={mono}>{dayCount}</span>
           </>
         )}
       </div>
@@ -85,7 +85,7 @@ export default function GameHeader({ gameAddress }: { gameAddress: string }) {
 
       {host && (
         <div style={{ fontSize: 13, marginTop: 6 }}>
-          host：<span style={mono}>{host}</span>（阶段推进由 host 控制）
+          Host: <span style={mono}>{host}</span> (Phase progression controlled by host)
         </div>
       )}
 
@@ -101,7 +101,7 @@ export default function GameHeader({ gameAddress }: { gameAddress: string }) {
             fontSize: 13,
           }}
         >
-          读取失败：{error}
+          Load failed: {error}
         </div>
       )}
     </div>

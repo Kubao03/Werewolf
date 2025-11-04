@@ -27,7 +27,7 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
 
   const [status, setStatus] = useState<string>('');
 
-  // 读取白天所需信息
+  // Read day phase info
   const refresh = async () => {
     if (!game) return;
     try {
@@ -71,7 +71,7 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
     }
   };
 
-  // 初始化账号 + 定时刷新
+  // Initialize account + periodic refresh
   useEffect(() => {
     if (!provider) return;
     (async () => {
@@ -88,7 +88,7 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider, gameAddress]);
 
-  // 计算领先者
+  // Calculate leader
   const leader = React.useMemo(() => {
     let idx = -1, max = -1;
     for (let i = 0; i < tally.length; i++) {
@@ -99,7 +99,7 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
 
   const validateTarget = (t: number) => {
     if (!Number.isInteger(t) || t < 0 || t >= seatsCount) {
-      throw new Error(`目标 seat 无效：应在 [0, ${Math.max(0, seatsCount - 1)}]`);
+      throw new Error(`Invalid target seat: should be in [0, ${Math.max(0, seatsCount - 1)}]`);
     }
   };
 
@@ -107,12 +107,12 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
     try {
       validateTarget(voteTarget);
       if (!youAlive) {
-        throw new Error('你已死亡或未加入，无法投票');
+        throw new Error('You are dead or not joined, cannot vote');
       }
       const signer = await getSignerRequired();
       const gw = new ethers.Contract(gameAddress, GAME_ABI, signer);
       await (await gw.vote(voteTarget)).wait();
-      setStatus('已投票/改票成功');
+      setStatus('Vote/re-vote successful');
       refresh();
     } catch (e: any) {
       setStatus(e?.message || String(e));
@@ -121,18 +121,18 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
 
   const resolveDay = async () => {
     try {
-      if (!isHost) throw new Error('仅 host 可推进/结算白天');
+      if (!isHost) throw new Error('Only host can advance/resolve day');
       const signer = await getSignerRequired();
       const gw = new ethers.Contract(gameAddress, GAME_ABI, signer);
       await (await gw.resolveDay()).wait();
-      setStatus('白天已结算');
+      setStatus('Day resolved');
       refresh();
     } catch (e: any) {
       setStatus(e?.message || String(e));
     }
   };
 
-  // 样式（内联）
+  // Styles（inline）
   const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 12, padding: 12 };
   const row: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' };
   const inputStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid #e3e3e8', borderRadius: 10 };
@@ -142,13 +142,13 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
 
   const deadTargetWarning =
     Number.isInteger(voteTarget) && voteTarget >= 0 && voteTarget < seatsCount && alive.length === seatsCount && !alive[voteTarget]
-      ? '（提示：你正投给一名已死亡玩家，通常不会有意义）'
+      ? '(Note: You are voting for a dead player, which is usually meaningless)'
       : '';
 
   return (
     <div style={{ display: 'grid', gap: 12 }}>
       <div style={section}>
-        <div style={{ fontWeight: 600, marginBottom: 8 }}>白天投票</div>
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>Day Voting</div>
         <div style={row}>
           <input
             placeholder="target seat"
@@ -160,32 +160,32 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
             onClick={doVote}
             style={youAlive ? btn : btnDisabled}
             disabled={!youAlive}
-            title={youAlive ? '' : '只有存活玩家才能投票'}
+            title={youAlive ? '' : 'Only alive players can vote'}
           >
-            投票 / 改票
+            Vote / Change Vote
           </button>
 
-          {/* 仅 host 可见 */}
-          <button onClick={resolveDay} style={isHost ? btn : btnDisabled} disabled={!isHost} title={isHost ? '' : '仅 host 可推进'}>
-            结算白天（host）
+          {/* Only host can see */}
+          <button onClick={resolveDay} style={isHost ? btn : btnDisabled} disabled={!isHost} title={isHost ? '' : 'Only host can advance'}>
+            Resolve Day (host)
           </button>
         </div>
 
         <div style={{ marginTop: 6, fontSize: 13, color: '#666' }}>
-          你的 seat(1-based)：<span style={mono}>{yourSeat1Based || '未加入'}</span>，
-          状态：{youAlive ? '🟢 存活' : '⚫️ 不可投票'}
+          Your seat(1-based)：<span style={mono}>{yourSeat1Based || 'Not joined'}</span>，
+          Status:{youAlive ? '🟢 Alive' : '⚫️ Cannot vote'}
           {deadTargetWarning && <span style={{ marginLeft: 8, color: '#b45309' }}>{deadTargetWarning}</span>}
         </div>
 
         {host && (
           <div style={{ marginTop: 6, fontSize: 12, color: '#666' }}>
-            本局 host：<span style={mono}>{host}</span>
+            Game host:<span style={mono}>{host}</span>
           </div>
         )}
       </div>
 
       <div style={section}>
-        <div style={{ fontWeight: 600, marginBottom: 8 }}>票数统计</div>
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>Vote Tally</div>
         <div style={{ display: 'grid', gap: 6 }}>
           {[...Array(seatsCount)].map((_, i) => (
             <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -193,7 +193,7 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
               <div>{alive[i] ? '🟢 alive' : '⚫️ dead'}</div>
               <div>votes: <b>{tally[i] || 0}</b></div>
               {leader.idx === i && leader.votes > 0 && (
-                <div style={{ color: '#065f46' }}>← 当前领先</div>
+                <div style={{ color: '#065f46' }}>← Current leader</div>
               )}
             </div>
           ))}

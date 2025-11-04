@@ -6,7 +6,7 @@ import { ethers } from 'ethers';
 import { GAME_ABI, ROLE_NAMES } from '@/lib/gameAbi';
 import { getBrowserProvider } from '@/lib/ethersHelpers';
 
-/** 并发读取的简易分批器，避免一次性大量请求把 RPC 撑爆 */
+/** Simple batch reader for concurrent reads, preventing RPC overload */
 async function batchMap<T, R>(arr: T[], fn: (t: T, i: number) => Promise<R>, batchSize = 10): Promise<R[]> {
   const out: R[] = [];
   for (let i = 0; i < arr.length; i += batchSize) {
@@ -38,7 +38,7 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
     setLoading(true);
     setErr('');
     try {
-      // 读取基础信息
+      // Read basic info
       const [nRaw, pRaw, dRaw] = await Promise.all([
         game.seatsCount(), // uint256 -> bigint
         game.phase(),      // uint8
@@ -56,7 +56,7 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
         return;
       }
 
-      // 读取 seats 列表
+      // Read seats list
       const base = await batchMap(
         Array.from({ length: n }, (_, i) => i),
         async (i) => {
@@ -65,7 +65,7 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
         }
       );
 
-      // Ended 阶段允许对任意地址揭示角色
+      // Ended phase allows revealing roles for any address
       const revealed = await batchMap(base, async (r) => {
         try {
           const roleU8: number = Number(await game.roleOf(r.player));
@@ -88,13 +88,13 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider, gameAddress]);
 
-  // 统计
+  // Statistics
   const aliveCount = rows.filter((r) => r.alive).length;
   const deadCount = rows.length - aliveCount;
   const wolves = rows.filter((r) => r.role === 1).length; // Role.Wolf = 1
   const goods = rows.filter((r) => r.role != null && r.role !== 1).length;
 
-  // 样式
+  // Styles
   const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 12, padding: 12 };
   const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', wordBreak: 'break-all' };
   const btn: React.CSSProperties = { padding: '8px 12px', border: '1px solid #ddd', borderRadius: 10, background: '#fff', cursor: 'pointer' };
@@ -102,22 +102,22 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
   return (
     <div style={section}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <div style={{ fontWeight: 600 }}>结算与身份揭示</div>
+        <div style={{ fontWeight: 600 }}>Final Results & Role Reveal</div>
         <button onClick={refresh} style={btn} disabled={loading}>
-          {loading ? '加载中…' : '重新加载'}
+          {loading ? 'Loading...' : 'Refresh'}
         </button>
       </div>
 
       <div style={{ fontSize: 13, color: '#444', marginBottom: 8 }}>
-        phase: <b>{phase}</b>（应为 Ended=6） | day: <span style={mono}>{dayCount}</span> | 座位数：<span style={mono}>{seatsCount}</span>
+        Phase: <b>{phase}</b> (should be Ended=6) | Day: <span style={mono}>{dayCount}</span> | Seats: <span style={mono}>{seatsCount}</span>
       </div>
 
       <div style={{ fontSize: 13, marginBottom: 10 }}>
-        存活：<b>{aliveCount}</b> / {rows.length}；死亡：<b>{deadCount}</b>。
+        Alive: <b>{aliveCount}</b> / {rows.length}; Dead: <b>{deadCount}</b>.
         {rows.some((r) => r.role != null) && (
           <>
             <span style={{ margin: '0 8px' }}>|</span>
-            阵营统计（基于角色）：狼人 <b>{wolves}</b>，好人 <b>{goods}</b>
+            Faction Stats (based on roles): Wolves <b>{wolves}</b>, Villagers <b>{goods}</b>
           </>
         )}
       </div>
@@ -147,7 +147,7 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
             fontSize: 13,
           }}
         >
-          读取失败：{err}
+          Load failed: {err}
         </div>
       )}
     </div>

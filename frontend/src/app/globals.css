@@ -1,6 +1,6 @@
 /* app/globals.css */
 
-/* 设计令牌 */
+/* Design Tokens */
 :root{
   --bg: #f7f7fb;
   --surface: #ffffff;
@@ -24,11 +24,11 @@ body{
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft Yahei', Arial, sans-serif;
 }
 
-/* 容器与栈布局 */
+/* Container & Stack Layout */
 .container{ max-width: 960px; margin: 0 auto; padding: 24px; }
 .stack{ display: grid; gap: 16px; }
 
-/* 顶栏（Hero） */
+/* Hero Section */
 .hero{
   background: radial-gradient(1200px 400px at 20% -10%, #ede9fe 0%, transparent 60%),
               radial-gradient(1200px 400px at 80% -10%, #dbeafe 0%, transparent 60%),
@@ -47,7 +47,7 @@ body{
   color: var(--muted);
 }
 
-/* 卡片、按钮、输入 */
+/* Cards, Buttons, Inputs */
 .card{
   background: var(--surface);
   border: 1px solid var(--border);
@@ -105,7 +105,7 @@ body{
   font-size: 12px;
 }
 
-/* 细节 */
+/* Details */
 .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break: break-all; }
 .notice{
   border: 1px solid var(--border);

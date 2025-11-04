@@ -15,13 +15,13 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
 
   const [account, setAccount] = useState<string>('');
 
-  // 链上状态
-  const [hunterToShoot1B, setHunterToShoot1B] = useState<number>(0); // 1-based，0=无
-  const [yourSeat1B, setYourSeat1B] = useState<number>(0);           // 1-based，0=未加入
+  // On-chain state
+  const [hunterToShoot1B, setHunterToShoot1B] = useState<number>(0); // 1-based, 0=none
+  const [yourSeat1B, setYourSeat1B] = useState<number>(0);           // 1-based, 0=not joined
   const [seatsCount, setSeatsCount] = useState<number>(0);
   const [alive, setAlive] = useState<boolean[]>([]);
 
-  // 本地输入
+  // Local input
   const [target, setTarget] = useState<number>(0);
 
   // UI
@@ -39,7 +39,7 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
       setSeatsCount(n);
       setHunterToShoot1B(hunter1B);
 
-      // 读取存活列表
+      // Read alive list
       const aliveArr = await Promise.all(
         [...Array(n)].map(async (_, i) => {
           const s = await gameRO.seats(i);
@@ -57,7 +57,7 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
     }
   };
 
-  // 初始化账号 + 轮询
+  // Initialize account + Polling
   useEffect(() => {
     if (!provider) return;
     (async () => {
@@ -80,17 +80,17 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
 
   const validateTarget = (t: number) => {
     if (!Number.isInteger(t) || t < 0 || t >= seatsCount) {
-      throw new Error(`目标 seat 无效：应在 [0, ${Math.max(0, seatsCount - 1)}]`);
+      throw new Error(`Invalid target seat: should be in [0, ${Math.max(0, seatsCount - 1)}]`);
     }
     if (!alive[t]) {
-      throw new Error('目标已死亡，不能射击已死亡玩家');
+      throw new Error('Target is dead, cannot shoot dead players');
     }
   };
 
   const shoot = async () => {
     try {
       if (!canShoot) {
-        throw new Error('当前你没有猎人开枪资格（仅被处决的猎人在本阶段可射击）');
+        throw new Error('You don't have hunter shooting rights (only executed hunters can shoot in this phase)');
       }
       validateTarget(target);
 
@@ -98,14 +98,14 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
       const gw = new ethers.Contract(gameAddress, GAME_ABI, signer);
       await (await gw.hunterShoot(target)).wait();
 
-      setStatus('已开枪，链上已确认');
+      setStatus('Shot confirmed on-chain');
       refresh();
     } catch (e: any) {
       setStatus(e?.message || String(e));
     }
   };
 
-  // 样式（内联）
+  // Styles（inline）
   const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 12, padding: 12 };
   const row: React.CSSProperties = { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' };
   const inputStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid #e3e3e8', borderRadius: 10 };
@@ -115,11 +115,11 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
 
   return (
     <div style={section}>
-      <div style={{ fontWeight: 600, marginBottom: 8 }}>猎人开枪</div>
+      <div style={{ fontWeight: 600, marginBottom: 8 }}>Hunter's Shot</div>
 
       <div style={{ marginBottom: 6, fontSize: 13, color: '#444' }}>
-        你的 seat(1-based)：<span style={mono}>{yourSeat1B || '未加入'}</span>，
-        当前允许开枪的 seat(1-based)：<span style={mono}>{hunterToShoot1B || '无'}</span>
+        Your seat(1-based)：<span style={mono}>{yourSeat1B || 'Not joined'}</span>，
+        Current hunter seat(1-based)：<span style={mono}>{hunterToShoot1B || 'None'}</span>
       </div>
 
       <div style={row}>
@@ -134,10 +134,10 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
         </button>
       </div>
 
-      {/* 存活速览（可选） */}
+      {/* Alive overview (optional) */}
       {seatsCount > 0 && (
         <div style={{ marginTop: 10, fontSize: 13 }}>
-          存活概览：
+          Alive overview:
           <span style={{ marginLeft: 6 }}>
             {alive.map((a, i) => (
               <span key={i} style={{ marginRight: 8 }}>
