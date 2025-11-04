@@ -22,6 +22,8 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
 
   const [yourSeat1Based, setYourSeat1Based] = useState<number>(0);
   const [youAlive, setYouAlive] = useState<boolean>(false);
+  const [host, setHost] = useState<string>('');
+  const [isHost, setIsHost] = useState<boolean>(false);
 
   const [status, setStatus] = useState<string>('');
 
@@ -29,13 +31,18 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
   const refresh = async () => {
     if (!game) return;
     try {
-      const nRaw = await game.seatsCount();               // uint256 -> bigint
+      const [nRaw, hostAddr] = await Promise.all([
+        game.seatsCount(),               // uint256 -> bigint
+        game.host(),
+      ]);
       const n = Number(nRaw as bigint);
       setSeatsCount(n);
+      setHost(String(hostAddr));
+      setIsHost(!!account && hostAddr && account.toLowerCase() === String(hostAddr).toLowerCase());
 
       const seatsArr = await Promise.all(
         [...Array(n)].map(async (_, i) => {
-          const s = await game.seats(i);                  // {player, alive, role}
+          const s = await game.seats(i); // {player, alive, role}
           return Boolean(s.alive);
         })
       );
@@ -43,7 +50,7 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
 
       const tallyArr = await Promise.all(
         [...Array(n)].map(async (_, i) => {
-          const v = await game.dayTally(i);               // uint8 -> bigint
+          const v = await game.dayTally(i); // uint8 -> bigint
           return Number(v as bigint);
         })
       );
@@ -53,7 +60,6 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
         const seat1 = Number(await game.seatOf(account)); // uint8 -> number
         setYourSeat1Based(seat1);
         if (seat1 > 0) {
-          // seat 索引转换为 0-based
           const myAlive = Boolean((await game.seats(seat1 - 1)).alive);
           setYouAlive(myAlive);
         } else {
@@ -101,13 +107,10 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
     try {
       validateTarget(voteTarget);
       if (!youAlive) {
-        // 链上会在 onlyAlive 处 revert，这里先做 UX 级别提醒
         throw new Error('你已死亡或未加入，无法投票');
       }
-
       const signer = await getSignerRequired();
       const gw = new ethers.Contract(gameAddress, GAME_ABI, signer);
-
       await (await gw.vote(voteTarget)).wait();
       setStatus('已投票/改票成功');
       refresh();
@@ -118,6 +121,7 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
 
   const resolveDay = async () => {
     try {
+      if (!isHost) throw new Error('仅 host 可推进/结算白天');
       const signer = await getSignerRequired();
       const gw = new ethers.Contract(gameAddress, GAME_ABI, signer);
       await (await gw.resolveDay()).wait();
@@ -128,7 +132,7 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
     }
   };
 
-  // 样式（内联，免 Tailwind）
+  // 样式（内联）
   const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 12, padding: 12 };
   const row: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' };
   const inputStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid #e3e3e8', borderRadius: 10 };
@@ -160,7 +164,11 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
           >
             投票 / 改票
           </button>
-          <button onClick={resolveDay} style={btn}>结算白天</button>
+
+          {/* 仅 host 可见 */}
+          <button onClick={resolveDay} style={isHost ? btn : btnDisabled} disabled={!isHost} title={isHost ? '' : '仅 host 可推进'}>
+            结算白天（host）
+          </button>
         </div>
 
         <div style={{ marginTop: 6, fontSize: 13, color: '#666' }}>
@@ -168,6 +176,12 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
           状态：{youAlive ? '🟢 存活' : '⚫️ 不可投票'}
           {deadTargetWarning && <span style={{ marginLeft: 8, color: '#b45309' }}>{deadTargetWarning}</span>}
         </div>
+
+        {host && (
+          <div style={{ marginTop: 6, fontSize: 12, color: '#666' }}>
+            本局 host：<span style={mono}>{host}</span>
+          </div>
+        )}
       </div>
 
       <div style={section}>

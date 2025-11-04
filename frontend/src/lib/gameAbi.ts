@@ -1,14 +1,14 @@
 export const GAME_ABI = [
     // -------- views --------
     { inputs: [], name: "cfg", outputs: [
-    { internalType: "uint8", name: "minPlayers", type: "uint8" },
-    { internalType: "uint8", name: "maxPlayers", type: "uint8" },
-    { internalType: "uint8", name: "wolves", type: "uint8" },
-    { internalType: "uint256", name: "stake", type: "uint256" },
-    { internalType: "uint32", name: "tSetup", type: "uint32" },
-    { internalType: "uint32", name: "tNightCommit", type: "uint32" },
-    { internalType: "uint32", name: "tNightReveal", type: "uint32" },
-    { internalType: "uint32", name: "tDayVote", type: "uint32" },
+      { internalType: "uint8", name: "minPlayers", type: "uint8" },
+      { internalType: "uint8", name: "maxPlayers", type: "uint8" },
+      { internalType: "uint8", name: "wolves", type: "uint8" },
+      { internalType: "uint256", name: "stake", type: "uint256" },
+      { internalType: "uint32", name: "tSetup", type: "uint32" },
+      { internalType: "uint32", name: "tNightCommit", type: "uint32" },
+      { internalType: "uint32", name: "tNightReveal", type: "uint32" },
+      { internalType: "uint32", name: "tDayVote", type: "uint32" },
     ], stateMutability: "view", type: "function" },
     { inputs: [], name: "phase", outputs: [{ internalType: "uint8", name: "", type: "uint8" }], stateMutability: "view", type: "function" },
     { inputs: [], name: "deadline", outputs: [{ internalType: "uint64", name: "", type: "uint64" }], stateMutability: "view", type: "function" },
@@ -17,9 +17,9 @@ export const GAME_ABI = [
     { inputs: [{ internalType: "address", name: "", type: "address" }], name: "seatOf", outputs: [{ internalType: "uint8", name: "", type: "uint8" }], stateMutability: "view", type: "function" },
     { inputs: [], name: "seatsCount", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], stateMutability: "view", type: "function" },
     { inputs: [{ internalType: "uint256", name: "", type: "uint256" }], name: "seats", outputs: [
-    { internalType: "address", name: "player", type: "address" },
-    { internalType: "bool", name: "alive", type: "bool" },
-    { internalType: "uint8", name: "role", type: "uint8" },
+      { internalType: "address", name: "player", type: "address" },
+      { internalType: "bool", name: "alive", type: "bool" },
+      { internalType: "uint8", name: "role", type: "uint8" },
     ], stateMutability: "view", type: "function" },
     { inputs: [{ internalType: "address", name: "p", type: "address" }], name: "roleOf", outputs: [{ internalType: "uint8", name: "", type: "uint8" }], stateMutability: "view", type: "function" },
     { inputs: [{ internalType: "uint8", name: "", type: "uint8" }], name: "dayTally", outputs: [{ internalType: "uint8", name: "", type: "uint8" }], stateMutability: "view", type: "function" },
@@ -28,8 +28,7 @@ export const GAME_ABI = [
     { inputs: [{ internalType: "address", name: "", type: "address" }], name: "hasAntidote", outputs: [{ internalType: "bool", name: "", type: "bool" }], stateMutability: "view", type: "function" },
     { inputs: [{ internalType: "address", name: "", type: "address" }], name: "hasPoison", outputs: [{ internalType: "bool", name: "", type: "bool" }], stateMutability: "view", type: "function" },
     { inputs: [{ internalType: "address", name: "", type: "address" }], name: "hasUsedNightAbility", outputs: [{ internalType: "bool", name: "", type: "bool" }], stateMutability: "view", type: "function" },
-    
-    
+  
     // -------- actions (player) --------
     { inputs: [], name: "join", outputs: [], stateMutability: "payable", type: "function" },
     // wolves
@@ -45,12 +44,11 @@ export const GAME_ABI = [
     { inputs: [], name: "resolveDay", outputs: [], stateMutability: "nonpayable", type: "function" },
     // hunter
     { inputs: [{ internalType: "uint8", name: "targetSeat", type: "uint8" }], name: "hunterShoot", outputs: [], stateMutability: "nonpayable", type: "function" },
-    ] as const;
-    
-    
-    export const PHASE_NAMES = [
+  ] as const;
+  
+  export const PHASE_NAMES = [
     "Lobby","Setup","NightCommit","NightReveal","NightResolve","DayVote","Ended","NightWitch","HunterShot",
-    ] as const;
-    
-    
-    export const ROLE_NAMES = ["Villager","Wolf","Seer","Hunter","Witch"] as const;
+  ] as const;
+  
+  export const ROLE_NAMES = ["Villager","Wolf","Seer","Hunter","Witch"] as const;
+  

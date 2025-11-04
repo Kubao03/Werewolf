@@ -99,7 +99,6 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
       await (await gw.hunterShoot(target)).wait();
 
       setStatus('已开枪，链上已确认');
-      // 成功后刷新一次，可能切入下一夜或结束
       refresh();
     } catch (e: any) {
       setStatus(e?.message || String(e));

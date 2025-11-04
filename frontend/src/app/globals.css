@@ -1,26 +1,119 @@
-@import "tailwindcss";
+/* app/globals.css */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* 设计令牌 */
+:root{
+  --bg: #f7f7fb;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e5e7eb;
+  --brand: #7c3aed;       /* violet-600 */
+  --brand-600: #6d28d9;   /* violet-700 */
+  --ring: rgba(124,58,237,.25);
+  --shadow: 0 10px 30px rgba(16,24,40,.08);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body{
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft Yahei', Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* 容器与栈布局 */
+.container{ max-width: 960px; margin: 0 auto; padding: 24px; }
+.stack{ display: grid; gap: 16px; }
+
+/* 顶栏（Hero） */
+.hero{
+  background: radial-gradient(1200px 400px at 20% -10%, #ede9fe 0%, transparent 60%),
+              radial-gradient(1200px 400px at 80% -10%, #dbeafe 0%, transparent 60%),
+              linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid var(--border);
+}
+.hero .title{
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  margin: 0;
+}
+.hero .subtitle{
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: var(--muted);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* 卡片、按钮、输入 */
+.card{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 16px;
 }
+
+.btn{
+  appearance: none;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: box-shadow .15s ease, transform .02s ease;
+}
+.btn:hover{ box-shadow: 0 6px 20px rgba(2,6,23,.06); }
+.btn:active{ transform: translateY(1px); }
+.btn[disabled]{ opacity: .6; cursor: not-allowed; }
+
+.btn-primary{
+  background: var(--brand);
+  color: #fff;
+  border-color: transparent;
+}
+.btn-primary:hover{ background: var(--brand-600); }
+
+.input, .select{
+  width: 100%;
+  max-width: 360px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+.input:focus, .select:focus{
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #e0e7ff;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+/* 细节 */
+.mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break: break-all; }
+.notice{
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 16px;
+  padding: 12px;
+  font-size: 14px;
+}
+.notice.ok{ border-color: #B7F7D0; background: #ECFDF5; color: #065F46; }
+.notice.err{ border-color: #FECACA; background: #FEF2F2; color: #7F1D1D; }
+.notice.muted{ border-color: var(--border); background: #fff; color: #333; }

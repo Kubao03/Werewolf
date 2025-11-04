@@ -61,7 +61,6 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
         Array.from({ length: n }, (_, i) => i),
         async (i) => {
           const s = await game.seats(i);
-          // s: { player, alive, role } — role 在 Ended 前对他人可能无意义，但 Ended 后允许 roleOf 任意地址
           return { player: String(s.player), alive: Boolean(s.alive) } as Row;
         }
       );
@@ -72,7 +71,6 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
           const roleU8: number = Number(await game.roleOf(r.player));
           return { ...r, role: roleU8 };
         } catch {
-          // 如果不是 Ended 或其他原因失败，就不填 role
           return r;
         }
       });
