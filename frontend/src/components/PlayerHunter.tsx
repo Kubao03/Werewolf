@@ -90,7 +90,7 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
   const shoot = async () => {
     try {
       if (!canShoot) {
-        throw new Error('You don't have hunter shooting rights (only executed hunters can shoot in this phase)');
+        throw new Error("You don't have hunter shooting rights (only executed hunters can shoot in this phase)");
       }
       validateTarget(target);
 
