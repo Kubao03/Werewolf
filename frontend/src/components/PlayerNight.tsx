@@ -73,13 +73,18 @@ export default function PlayerNight({ gameAddress }: { gameAddress: string }) {
       try {
         await provider.send('eth_requestAccounts', []);
         const s = await provider.getSigner();
-        setAccount(await s.getAddress());
-      } finally {
-        refresh(); // Initial refresh
+        const addr = await s.getAddress();
+        setAccount(addr);
+        // Refresh immediately after account is set
+        if (game) {
+          await refresh();
+        }
+      } catch (e) {
+        console.warn('Failed to get account:', e);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider]);
+  }, [provider, game]);
 
   // When switching game address/account, clear identity and cache (avoid residue)
   useEffect(() => {
@@ -91,6 +96,23 @@ export default function PlayerNight({ gameAddress }: { gameAddress: string }) {
     setSalt('');
     setVictimThisNight(255);
   }, [gameAddress, account]);
+
+  // ==== Periodic refresh ====
+  useEffect(() => {
+    if (!game || !account) return;
+    let timer: any;
+    const loop = async () => {
+      try {
+        await refresh();
+      } catch (e) {
+        console.warn('Failed to refresh player night state:', e);
+      }
+      timer = setTimeout(loop, 3000);
+    };
+    loop();
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game, account, gameAddress]);
 
   // ==== Basic refresh ====
   const refresh = async () => {

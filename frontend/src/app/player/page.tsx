@@ -50,6 +50,10 @@ export default function PlayerPage() {
       if (account) {
         const seat1 = Number(await game.seatOf(account));
         setYourSeat1B(seat1);
+        // If player has joined (seat1 > 0), automatically set hasJoined to true
+        if (seat1 > 0) {
+          setHasJoined(true);
+        }
       }
       toast('Game info loaded.', 'ok');
     } catch (e: any) { toast(e.message || String(e), 'err'); }
@@ -67,6 +71,10 @@ export default function PlayerPage() {
         if (account) {
           const seat1 = Number(await game.seatOf(account));
           setYourSeat1B(seat1);
+          // If player has joined (seat1 > 0), automatically set hasJoined to true
+          if (seat1 > 0 && !hasJoined) {
+            setHasJoined(true);
+          }
         } else {
           setYourSeat1B(0);
         }
@@ -75,7 +83,7 @@ export default function PlayerPage() {
     };
     loop();
     return () => clearTimeout(timer);
-  }, [provider, gameAddress, account]);
+  }, [provider, gameAddress, account, hasJoined]);
 
   const join = async () => {
     try {
@@ -123,35 +131,6 @@ export default function PlayerPage() {
   };
 
   // Auto-load functionality removed - user can use "Join/Rejoin Game" button to restore previous games
-
-  const viewMyRole = async () => {
-    try {
-      if (!provider) throw new Error('Please connect wallet');
-      if (!account) throw new Error('No account connected');
-      if (!ethers.isAddress(gameAddress)) throw new Error('Please enter a valid WerewolfGame address');
-
-      const signer = await provider.getSigner();
-      const game = new ethers.Contract(gameAddress, GAME_ABI, signer);
-      const me = await signer.getAddress();
-
-      const seat1: number = Number(await game.seatOf(me));
-      if (seat1 === 0) {
-        toast('You have not joined the game yet (no seat)', 'err');
-        return;
-      }
-
-      const [phaseRaw, dayRaw] = await Promise.all([game.phase(), game.dayCount()]);
-      const phaseNum = Number(phaseRaw);
-      const dayNum = Number(dayRaw as bigint);
-      if (phaseNum < 2 || dayNum === 0) {
-        toast('Roles not assigned yet. Please wait for host to assign roles.', 'muted');
-        return;
-      }
-
-      const r: number = await game.roleOf(me);
-      toast(`Your role: ${ROLE_NAMES[r as 0|1|2|3|4] ?? `Unknown(${r})`}`, 'ok');
-    } catch (e: any) { toast(e.message || String(e), 'err'); }
-  };
 
   const card: React.CSSProperties = { border: '1px solid #eee', borderRadius: 16, padding: 16, background: '#fafafa' };
   const btn: React.CSSProperties = { padding: '10px 14px', borderRadius: 12, border: '1px solid #ddd', background: '#fff', cursor: 'pointer' };
@@ -234,7 +213,6 @@ export default function PlayerPage() {
                 >
                   Join/Rejoin Game
                 </button>
-                <button type="button" onClick={viewMyRole} style={canAct ? btn : btnDisabled} disabled={!canAct}>View My Role</button>
               </div>
               {host && (
                 <div style={{ fontSize: 13, color: '#666', paddingTop: 8, borderTop: '1px solid #eee' }}>
