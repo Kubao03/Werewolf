@@ -42,6 +42,12 @@
 - ⏱️ **Timed Phases**: Automatic progression with configurable deadlines
 - 🎨 **Modern UI**: Beautiful Next.js frontend with React components
 - 🌐 **Cross-Platform**: Works on any device with a Web3 wallet
+- 🎮 **Host/Player Separation**: Dedicated interfaces for game hosts and players
+- 🎭 **Role Visualization**: Visual role cards with character images
+- 🏆 **Victory/Defeat Screens**: Stunning end-game animations based on game outcome
+- 📊 **Vote Tracking**: Real-time vote tally with tie detection and visual indicators
+- 🔄 **Game Restart**: Host can restart games without losing players
+- 📱 **Persistent Game State**: Game addresses saved to localStorage for easy reconnection
 
 ---
 
@@ -59,10 +65,33 @@ Werewolf/
 ├── frontend/              # Next.js web application
 │   ├── src/
 │   │   ├── app/          # App router pages
+│   │   │   ├── page.tsx  # Homepage (Host/Player selection)
+│   │   │   ├── host/     # Host dashboard
+│   │   │   └── player/   # Player dashboard
 │   │   ├── components/   # React components
+│   │   │   ├── GameHeader.tsx
+│   │   │   ├── PlayerList.tsx
+│   │   │   ├── PlayerSeatTable.tsx
+│   │   │   ├── PlayerNight.tsx
+│   │   │   ├── PlayerDay.tsx
+│   │   │   ├── PlayerHunter.tsx
+│   │   │   ├── PlayerEnd.tsx
+│   │   │   ├── HostControl.tsx
+│   │   │   └── VoteTally.tsx
+│   │   ├── contexts/    # React Context
+│   │   │   └── WalletContext.tsx
 │   │   └── lib/          # Web3 integration
+│   │       ├── gameAbi.ts
+│   │       ├── roleImages.ts
+│   │       └── ethersHelpers.ts
 │   └── public/
-│       └── images/       # Game assets
+│       └── images/
+│           └── roles/    # Role character images
+│               ├── Villager.png
+│               ├── Werewolf.png
+│               ├── Seer.png
+│               ├── Hunter.png
+│               └── Witch.png
 ├── figures/              # Role artwork (backup)
 └── artifacts/            # Compiled contracts (gitignored)
 ```
@@ -91,8 +120,9 @@ cd Werewolf
 1. Open [Remix IDE](https://remix.ethereum.org/)
 2. Import the `contracts/Werewolf.sol` file
 3. Compile with Solidity ^0.8.24
-4. Deploy to your preferred network (testnet recommended)
-5. Copy the contract address
+4. Deploy the **WerewolfFactory** contract first
+5. Use the factory to create game instances
+6. Copy the factory address for the frontend
 
 **Option B: Using Deployment Scripts**
 
@@ -113,17 +143,21 @@ cd frontend
 # Install dependencies
 npm install
 
-# Configure environment (create .env.local)
-echo "NEXT_PUBLIC_CONTRACT_ADDRESS=your_contract_address" > .env.local
-echo "NEXT_PUBLIC_CHAIN_ID=your_chain_id" >> .env.local
-
 # Start development server
 npm run dev
 ```
 
+**Note**: The frontend uses a global wallet connection system. Connect your MetaMask wallet on the homepage, then choose to be a Host or Player. Game addresses are automatically saved to localStorage for easy reconnection.
+
 ### 4️⃣ Open in Browser
 
 Visit [http://localhost:3000](http://localhost:3000) and connect your Web3 wallet!
+
+**Game Flow**:
+1. **Homepage**: Connect wallet and choose Host or Player mode
+2. **Host**: Create game using Factory, assign roles, and manage game phases
+3. **Player**: Join game by entering game address, view your role, and perform actions
+4. **Game End**: See victory/defeat screen with role reveal and statistics
 
 ---
 
@@ -152,12 +186,20 @@ graph LR
 1. Night results are revealed
 2. Players discuss and debate
 3. Vote to eliminate a suspected werewolf
-4. **Hunter** shoots if eliminated
+4. **Tie Detection**: If multiple players have the same highest vote count, no execution occurs
+5. **Hunter** shoots if eliminated during voting
 
 ### 🏆 Victory Conditions
 
 - **Good Wins**: All werewolves eliminated
 - **Evil Wins**: Werewolves equal or outnumber good players
+
+### 🎯 Game Management
+
+- **Host Controls**: Create games, assign roles, advance phases, restart games
+- **Player Actions**: Join games, perform role-specific actions, vote
+- **Game Restart**: Host can restart a finished game without losing players
+- **Persistent State**: Game addresses saved to localStorage for easy reconnection
 
 ---
 
@@ -174,7 +216,8 @@ graph LR
 - **TypeScript** 5.0
 - **Tailwind CSS** 4.1
 - **Ethers.js** 6.15 for Web3 integration
-- **Zustand** for state management
+- **React Context** for global wallet state management
+- **Next.js Image** for optimized role image display
 
 ---
 
@@ -197,12 +240,28 @@ enum Role { Villager, Wolf, Seer, Hunter, Witch }
 
 ### Key Components
 
-- **GameHeader.tsx** - Game status and player info display
-- **JoinWerewolfGame.tsx** - Lobby and game creation
-- **PlayerNight.tsx** - Night phase actions (Werewolf, Seer)
-- **PlayerDay.tsx** - Day phase voting
-- **PlayerHunter.tsx** - Hunter's final shot
-- **PlayerEnd.tsx** - Game results
+#### Pages
+- **page.tsx** (Home) - Landing page with wallet connection and Host/Player selection
+- **host/page.tsx** - Host dashboard for game creation and management
+- **player/page.tsx** - Player dashboard for joining and playing games
+
+#### Game Components
+- **GameHeader.tsx** - Game status and configuration display
+- **PlayerList.tsx** - Host view of all players with roles and status
+- **PlayerSeatTable.tsx** - Player view of seat table with role visibility
+- **PlayerNight.tsx** - Night phase actions (Werewolf, Seer, Witch) with role card display
+- **PlayerDay.tsx** - Day phase voting with tie detection and visual indicators
+- **PlayerHunter.tsx** - Hunter's final shot interface
+- **PlayerEnd.tsx** - Victory/Defeat screens with animations and final game results
+- **HostControl.tsx** - Host controls for phase progression, role assignment, and game restart
+- **VoteTally.tsx** - Real-time vote statistics display for hosts with tie detection
+
+#### Infrastructure
+- **WalletContext.tsx** - Global wallet state management
+- **providers.tsx** - React Context providers wrapper
+- **gameAbi.ts** - Contract ABI and constants (GAME_ABI, FACTORY_ABI, PHASE_NAMES, ROLE_NAMES)
+- **roleImages.ts** - Role image mapping utilities
+- **ethersHelpers.ts** - Ethers.js helper functions
 
 ### Frontend Development
 
