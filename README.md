@@ -11,7 +11,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16.0-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Game Rules](#-game-rules) • [Architecture](#-architecture)
+**🌐 [Live Demo](https://werewolf-seven.vercel.app/)** • [Features](#-features) • [Quick Start](#-quick-start) • [Game Rules](#-game-rules) • [Architecture](#-architecture)
 
 </div>
 
@@ -109,7 +109,7 @@ Werewolf/
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/Werewolf.git
+git clone https://github.com/Kubao03/Werewolf.git
 cd Werewolf
 ```
 
@@ -151,7 +151,9 @@ npm run dev
 
 ### 4️⃣ Open in Browser
 
-Visit [http://localhost:3000](http://localhost:3000) and connect your Web3 wallet!
+**🌐 Try the Live Demo**: [https://werewolf-seven.vercel.app/](https://werewolf-seven.vercel.app/)
+
+Or run locally: Visit [http://localhost:3000](http://localhost:3000) and connect your Web3 wallet!
 
 **Game Flow**:
 1. **Homepage**: Connect wallet and choose Host or Player mode
@@ -323,5 +325,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 **Built as part of the NUS Blockchain Engineering course**
 
 🐺 Made with blockchain technology
+
+**🌐 [Live Website](https://werewolf-seven.vercel.app/)** • **📦 [GitHub Repository](https://github.com/Kubao03/Werewolf)**
 
 </div>
