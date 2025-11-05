@@ -295,7 +295,7 @@ export default function PlayerPage() {
             {phase === 5 && (
               <div style={card}>
                 <div style={{ fontWeight: 600, marginBottom: 8 }}>Day Voting</div>
-                <PlayerDay key={`${gameAddress}:${account}:day`} gameAddress={gameAddress} />
+                <PlayerDay key={`${gameAddress}:${account}:day`} gameAddress={gameAddress} provider={provider} account={account} />
               </div>
             )}
 

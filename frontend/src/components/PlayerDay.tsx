@@ -6,14 +6,17 @@ import { ethers } from 'ethers';
 import { GAME_ABI } from '@/lib/gameAbi';
 import { getBrowserProvider, getSignerRequired } from '@/lib/ethersHelpers';
 
-export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
-  const provider = useMemo(getBrowserProvider, []);
+interface PlayerDayProps {
+  gameAddress: string;
+  provider: ethers.BrowserProvider | null;
+  account: string;
+}
+
+export default function PlayerDay({ gameAddress, provider, account }: PlayerDayProps) {
   const game = useMemo(
     () => (provider ? new ethers.Contract(gameAddress, GAME_ABI, provider) : null),
     [provider, gameAddress]
   );
-
-  const [account, setAccount] = useState<string>('');
 
   const [seatsCount, setSeatsCount] = useState<number>(0);
   const [alive, setAlive] = useState<boolean[]>([]);
@@ -76,37 +79,29 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
     }
   };
 
-  // Initialize account + periodic refresh
+  // Periodic refresh when account is available
   useEffect(() => {
-    if (!provider) return;
+    if (!provider || !game) return;
     let mounted = true;
-    (async () => {
-      try {
-        await provider.send('eth_requestAccounts', []);
-        const s = await provider.getSigner();
-        const addr = await s.getAddress();
-        if (mounted) {
-          setAccount(addr);
-          // Refresh immediately after account is set
-          if (game) {
-            await refresh();
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to get account:', e);
-      }
-    })();
+    
+    // Initial refresh
+    if (account) {
+      refresh();
+    }
+    
+    // Periodic refresh
     const t = setInterval(() => {
-      if (mounted && game) {
+      if (mounted && game && account) {
         refresh();
       }
     }, 5000);
+    
     return () => {
       mounted = false;
       clearInterval(t);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider, gameAddress]);
+  }, [provider, gameAddress, account]);
 
   // Calculate leader
   const leader = React.useMemo(() => {
