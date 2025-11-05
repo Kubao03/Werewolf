@@ -15,6 +15,8 @@ export default function HostControl({ gameAddress, provider, onMessage }: HostCo
   const [dayCount, setDayCount] = React.useState<number>(0);
   const [seatsCount, setSeatsCount] = React.useState<number>(0);
   const [roles, setRoles] = useState<string>('');
+  const [tally, setTally] = useState<number[]>([]);
+  const [alive, setAlive] = useState<boolean[]>([]);
 
   const refresh = async () => {
     if (!provider || !ethers.isAddress(gameAddress)) return;
@@ -28,6 +30,26 @@ export default function HostControl({ gameAddress, provider, onMessage }: HostCo
       setPhase(Number(p));
       setDayCount(Number(d));
       setSeatsCount(Number(s));
+      
+      // Load vote tally and alive status if in Day Vote phase
+      if (Number(p) === 5) {
+        const n = Number(s);
+        const [tallyArr, aliveArr] = await Promise.all([
+          Promise.all([...Array(n)].map(async (_, i) => {
+            const v = await game.dayTally(i);
+            return Number(v as bigint);
+          })),
+          Promise.all([...Array(n)].map(async (_, i) => {
+            const seat = await game.seats(i);
+            return Boolean(seat.alive);
+          })),
+        ]);
+        setTally(tallyArr);
+        setAlive(aliveArr);
+      } else {
+        setTally([]);
+        setAlive([]);
+      }
     } catch (e) {
       console.error('Failed to refresh:', e);
     }
@@ -232,12 +254,69 @@ export default function HostControl({ gameAddress, provider, onMessage }: HostCo
       )}
 
       {phase === 5 && (
-        <div style={card}>
-          <div style={{ fontWeight: 600, marginBottom: 12 }}>Day Vote Phase</div>
-          <button onClick={() => advancePhase('resolveDay')} style={btn}>
-            Resolve Day Vote
-          </button>
-        </div>
+        <>
+          <div style={card}>
+            <div style={{ fontWeight: 600, marginBottom: 12 }}>Day Vote Phase</div>
+            <button onClick={() => advancePhase('resolveDay')} style={btn}>
+              Resolve Day Vote
+            </button>
+          </div>
+
+          {/* Vote Tally Display */}
+          <div style={card}>
+            <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 12 }}>Vote Tally</div>
+            {seatsCount > 0 ? (
+              <div style={{ display: 'grid', gap: 8 }}>
+                {[...Array(seatsCount)].map((_, i) => {
+                  const votes = tally[i] || 0;
+                  const maxVotes = Math.max(...(tally.length > 0 ? tally : [0]));
+                  const isLeader = votes === maxVotes && votes > 0;
+                  const tieCount = tally.filter(v => v === maxVotes && maxVotes > 0).length;
+                  
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        gap: 16,
+                        alignItems: 'center',
+                        padding: '10px 12px',
+                        background: isLeader ? (tieCount > 1 ? '#fff7ed' : '#f0fdf4') : '#fff',
+                        borderRadius: 8,
+                        border: isLeader ? (tieCount > 1 ? '1px solid #fdba74' : '1px solid #86efac') : '1px solid #eee'
+                      }}
+                    >
+                      <div style={{ fontWeight: 600, minWidth: 40 }}>#{i}</div>
+                      <div style={{ minWidth: 80 }}>
+                        {alive[i] ? (
+                          <span style={{ color: '#065f46' }}>🟢 Alive</span>
+                        ) : (
+                          <span style={{ color: '#666' }}>⚫️ Dead</span>
+                        )}
+                      </div>
+                      <div style={{ minWidth: 80 }}>
+                        Votes: <b style={{ fontSize: 16 }}>{votes}</b>
+                      </div>
+                      {isLeader && tieCount === 1 && (
+                        <div style={{ color: '#065f46', fontWeight: 600 }}>← Winner</div>
+                      )}
+                      {isLeader && tieCount > 1 && (
+                        <div style={{ color: '#b45309', fontWeight: 600 }}>← Tied ({tieCount} players)</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ fontSize: 14, color: '#666' }}>No players yet</div>
+            )}
+            {tally.length > 0 && Math.max(...tally) === 0 && (
+              <div style={{ marginTop: 12, fontSize: 13, color: '#666', padding: 8, background: '#f9fafb', borderRadius: 8 }}>
+                No votes cast yet
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {phase === 6 && (

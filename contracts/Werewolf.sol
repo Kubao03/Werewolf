@@ -371,17 +371,38 @@ contract WerewolfGame {
         emit DayVoted(msg.sender, targetSeat);
     }
 
-    // [MOD] resolveDay now handles Hunter
+    // [MOD] resolveDay now handles Hunter and tie votes
     function resolveDay() external inPhase(Phase.DayVote) {
         uint8 executed = 255;
         uint8 maxVotes = 0;
+        
+        // Step 1: Find the maximum vote count
         for (uint8 s=0; s<seats.length; s++) {
             if (!seats[s].alive) continue;
             uint8 v = dayTally[s];
-            if (v > maxVotes) { maxVotes = v; executed = s; }
+            if (v > maxVotes) {
+                maxVotes = v;
+            }
         }
-
-        if (executed < seats.length && seats[executed].alive) {
+        
+        // Step 2: Check if there's a unique winner (only one player has max votes)
+        uint8 countWithMaxVotes = 0;
+        for (uint8 s=0; s<seats.length; s++) {
+            if (!seats[s].alive) continue;
+            if (dayTally[s] == maxVotes && maxVotes > 0) {
+                countWithMaxVotes++;
+                if (countWithMaxVotes == 1) {
+                    executed = s; // Record the first one (in case it's unique)
+                } else {
+                    // Multiple players tied for max votes, no execution
+                    executed = 255;
+                    break;
+                }
+            }
+        }
+        
+        // Only execute if there's a unique winner (countWithMaxVotes == 1)
+        if (executed < seats.length && seats[executed].alive && countWithMaxVotes == 1) {
             // [NEW] Check for Hunter
             if (seats[executed].role == Role.Hunter) {
                 _applyDeath(executed); // Hunter dies
@@ -396,6 +417,7 @@ contract WerewolfGame {
             // Normal death
             _applyDeath(executed);
         }
+        // If executed == 255 (tie or no votes), no one dies, just advance to next day
 
         if (_checkWin()) return;
         
