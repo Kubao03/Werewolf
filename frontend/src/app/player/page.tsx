@@ -307,10 +307,7 @@ export default function PlayerPage() {
             )}
 
             {phase === 6 && (
-              <div style={card}>
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>Game Over</div>
-                <PlayerEnd key={`${gameAddress}:end`} gameAddress={gameAddress} />
-              </div>
+              <PlayerEnd key={`${gameAddress}:end`} gameAddress={gameAddress} />
             )}
 
             {[1, 4].includes(phase) && (

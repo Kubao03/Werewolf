@@ -95,61 +95,113 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
   const goods = rows.filter((r) => r.role != null && r.role !== 1).length;
 
   // Styles
-  const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 12, padding: 12 };
+  const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 16, padding: 16, background: '#fafafa' };
   const mono: React.CSSProperties = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', wordBreak: 'break-all' };
-  const btn: React.CSSProperties = { padding: '8px 12px', border: '1px solid #ddd', borderRadius: 10, background: '#fff', cursor: 'pointer' };
+  const btn: React.CSSProperties = { 
+    padding: '10px 14px', 
+    border: '1px solid #ddd', 
+    borderRadius: 12, 
+    background: '#fff', 
+    cursor: 'pointer',
+    fontSize: 14,
+    fontWeight: 500
+  };
+
+  const table: React.CSSProperties = {
+    width: '100%',
+    borderCollapse: 'collapse',
+  };
+
+  const th: React.CSSProperties = {
+    textAlign: 'left',
+    padding: '8px 12px',
+    borderBottom: '2px solid #ddd',
+    fontWeight: 600,
+    fontSize: 14,
+  };
+
+  const td: React.CSSProperties = {
+    padding: '8px 12px',
+    borderBottom: '1px solid #eee',
+    fontSize: 14,
+  };
 
   return (
-    <div style={section}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <div style={{ fontWeight: 600 }}>Final Results & Role Reveal</div>
-        <button onClick={refresh} style={btn} disabled={loading}>
-          {loading ? 'Loading...' : 'Refresh'}
-        </button>
-      </div>
+    <div style={{ display: 'grid', gap: 16 }}>
+      <div style={section}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ fontWeight: 600, fontSize: 16 }}>Final Results & Role Reveal</div>
+          <button onClick={refresh} style={btn} disabled={loading}>
+            {loading ? 'Loading...' : 'Refresh'}
+          </button>
+        </div>
 
-      <div style={{ fontSize: 13, color: '#444', marginBottom: 8 }}>
-        Phase: <b>{phase}</b> (should be Ended=6) | Day: <span style={mono}>{dayCount}</span> | Seats: <span style={mono}>{seatsCount}</span>
-      </div>
+        <div style={{ fontSize: 13, color: '#666', marginBottom: 12, padding: 12, background: '#f9fafb', borderRadius: 8 }}>
+          Phase: <b>{phase}</b> (Ended) | Day: <span style={mono}>{dayCount}</span> | Seats: <span style={mono}>{seatsCount}</span>
+        </div>
 
-      <div style={{ fontSize: 13, marginBottom: 10 }}>
-        Alive: <b>{aliveCount}</b> / {rows.length}; Dead: <b>{deadCount}</b>.
-        {rows.some((r) => r.role != null) && (
-          <>
-            <span style={{ margin: '0 8px' }}>|</span>
-            Faction Stats (based on roles): Wolves <b>{wolves}</b>, Villagers <b>{goods}</b>
-          </>
+        <div style={{ fontSize: 14, marginBottom: 16, padding: 12, background: '#f0fdf4', borderRadius: 8, border: '1px solid #86efac' }}>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 8 }}>
+            <span>Alive: <b style={{ color: '#065f46' }}>{aliveCount}</b> / {rows.length}</span>
+            <span>Dead: <b style={{ color: '#666' }}>{deadCount}</b></span>
+          </div>
+          {rows.some((r) => r.role != null) && (
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8, paddingTop: 8, borderTop: '1px solid #86efac' }}>
+              <span>Wolves: <b style={{ color: '#dc2626' }}>{wolves}</b></span>
+              <span>Villagers: <b style={{ color: '#065f46' }}>{goods}</b></span>
+            </div>
+          )}
+        </div>
+
+        <table style={table}>
+          <thead>
+            <tr>
+              <th style={th}>Seat</th>
+              <th style={th}>Address</th>
+              <th style={th}>Status</th>
+              <th style={th}>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i}>
+                <td style={td}>#{i}</td>
+                <td style={{ ...td, ...mono }}>
+                  {r.player.slice(0, 10)}...{r.player.slice(-8)}
+                </td>
+                <td style={td}>
+                  {r.alive ? <span style={{ color: '#065f46', fontWeight: 600 }}>🟢 Alive</span> : <span style={{ color: '#666' }}>⚫ Dead</span>}
+                </td>
+                <td style={td}>
+                  {r.role != null ? (
+                    <span style={{ fontWeight: 600, color: r.role === 1 ? '#dc2626' : '#065f46' }}>
+                      {ROLE_NAMES[r.role] ?? `Unknown(${r.role})`}
+                    </span>
+                  ) : (
+                    <span style={{ color: '#999' }}>—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {err && (
+          <div
+            style={{
+              marginTop: 16,
+              border: '1px solid #FECACA',
+              background: '#FEF2F2',
+              color: '#7F1D1D',
+              borderRadius: 12,
+              padding: 12,
+              fontSize: 14,
+            }}
+          >
+            Load failed: {err}
+          </div>
         )}
       </div>
-
-      <div style={{ display: 'grid', gap: 6 }}>
-        {rows.map((r, i) => (
-          <div key={i} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: 12, alignItems: 'center' }}>
-            <div># {i}</div>
-            <div style={mono}>{r.player}</div>
-            <div>{r.alive ? '🟢 alive' : '⚫️ dead'}</div>
-            <div>
-              {r.role != null ? ROLE_NAMES[r.role] ?? `Unknown(${r.role})` : '—'}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {err && (
-        <div
-          style={{
-            marginTop: 10,
-            border: '1px solid #FECACA',
-            background: '#FEF2F2',
-            color: '#7F1D1D',
-            borderRadius: 10,
-            padding: 10,
-            fontSize: 13,
-          }}
-        >
-          Load failed: {err}
-        </div>
-      )}
     </div>
   );
 }
