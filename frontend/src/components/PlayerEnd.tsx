@@ -5,6 +5,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
 import { GAME_ABI, ROLE_NAMES } from '@/lib/gameAbi';
 import { getBrowserProvider } from '@/lib/ethersHelpers';
+import { getRoleImage } from '@/lib/roleImages';
+import Image from 'next/image';
 
 /** Simple batch reader for concurrent reads, preventing RPC overload */
 async function batchMap<T, R>(arr: T[], fn: (t: T, i: number) => Promise<R>, batchSize = 10): Promise<R[]> {
@@ -174,9 +176,20 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
                 </td>
                 <td style={td}>
                   {r.role != null ? (
-                    <span style={{ fontWeight: 600, color: r.role === 1 ? '#dc2626' : '#065f46' }}>
-                      {ROLE_NAMES[r.role] ?? `Unknown(${r.role})`}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {getRoleImage(r.role) && (
+                        <Image
+                          src={getRoleImage(r.role)!}
+                          alt={ROLE_NAMES[r.role] ?? `Unknown(${r.role})`}
+                          width={32}
+                          height={32}
+                          style={{ borderRadius: 8, objectFit: 'cover' }}
+                        />
+                      )}
+                      <span style={{ fontWeight: 600, color: r.role === 1 ? '#dc2626' : '#065f46' }}>
+                        {ROLE_NAMES[r.role] ?? `Unknown(${r.role})`}
+                      </span>
+                    </div>
                   ) : (
                     <span style={{ color: '#999' }}>—</span>
                   )}

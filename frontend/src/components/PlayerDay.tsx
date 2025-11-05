@@ -3,8 +3,10 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
-import { GAME_ABI } from '@/lib/gameAbi';
+import { GAME_ABI, ROLE_NAMES } from '@/lib/gameAbi';
 import { getBrowserProvider, getSignerRequired } from '@/lib/ethersHelpers';
+import { getRoleImage } from '@/lib/roleImages';
+import Image from 'next/image';
 
 interface PlayerDayProps {
   gameAddress: string;
@@ -27,6 +29,9 @@ export default function PlayerDay({ gameAddress, provider, account }: PlayerDayP
   const [youAlive, setYouAlive] = useState<boolean>(false);
   const [host, setHost] = useState<string>('');
   const [isHost, setIsHost] = useState<boolean>(false);
+  const [myRole, setMyRole] = useState<number | null>(null);
+  const [phase, setPhase] = useState<number>(0);
+  const [dayCount, setDayCount] = useState<number>(0);
 
   const [status, setStatus] = useState<string>('');
 
@@ -34,13 +39,19 @@ export default function PlayerDay({ gameAddress, provider, account }: PlayerDayP
   const refresh = async () => {
     if (!game) return;
     try {
-      const [nRaw, hostAddr] = await Promise.all([
+      const [nRaw, hostAddr, pRaw, dRaw] = await Promise.all([
         game.seatsCount(),               // uint256 -> bigint
         game.host(),
+        game.phase(),
+        game.dayCount(),
       ]);
       const n = Number(nRaw as bigint);
+      const p = Number(pRaw);
+      const d = Number(dRaw as bigint);
       setSeatsCount(n);
       setHost(String(hostAddr));
+      setPhase(p);
+      setDayCount(d);
 
       const seatsArr = await Promise.all(
         [...Array(n)].map(async (_, i) => {
@@ -66,8 +77,22 @@ export default function PlayerDay({ gameAddress, provider, account }: PlayerDayP
         if (seat1 > 0) {
           const myAlive = Boolean((await game.seats(seat1 - 1)).alive);
           setYouAlive(myAlive);
+          // Try to get role if assigned
+          if (p >= 2 && d > 0) {
+            try {
+              const signer = await provider!.getSigner();
+              const gameWithSigner = new ethers.Contract(gameAddress, GAME_ABI, signer);
+              const roleNum = Number(await gameWithSigner.roleOf(account));
+              setMyRole(roleNum);
+            } catch {
+              setMyRole(null);
+            }
+          } else {
+            setMyRole(null);
+          }
         } else {
           setYouAlive(false);
+          setMyRole(null);
         }
       } else {
         setYourSeat1Based(0);
@@ -184,7 +209,9 @@ export default function PlayerDay({ gameAddress, provider, account }: PlayerDayP
       : '';
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 24, alignItems: 'start' }}>
+      {/* Left: Main Content */}
+      <div style={{ display: 'grid', gap: 16 }}>
       <div style={section}>
         <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 12 }}>Day Voting</div>
         <div style={row}>
@@ -267,6 +294,37 @@ export default function PlayerDay({ gameAddress, provider, account }: PlayerDayP
           color: '#333'
         }}>
           {status}
+        </div>
+      )}
+      </div>
+
+      {/* Right: Role Card */}
+      {myRole !== null && getRoleImage(myRole) && yourSeat1Based > 0 && phase >= 2 && dayCount > 0 && (
+        <div style={{
+          border: '2px solid #667eea',
+          borderRadius: 16,
+          padding: 20,
+          background: 'linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 12,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          position: 'sticky',
+          top: 20,
+          minWidth: 140,
+        }}>
+          <div style={{ fontSize: 14, color: '#666', fontWeight: 500 }}>Your Role</div>
+          <Image
+            src={getRoleImage(myRole)!}
+            alt={ROLE_NAMES[myRole]}
+            width={100}
+            height={100}
+            style={{ borderRadius: 12, objectFit: 'cover', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)' }}
+          />
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#667eea', textAlign: 'center' }}>
+            {ROLE_NAMES[myRole]}
+          </div>
         </div>
       )}
     </div>

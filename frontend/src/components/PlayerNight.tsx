@@ -4,6 +4,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
 import { GAME_ABI, ROLE_NAMES } from '@/lib/gameAbi';
 import { getBrowserProvider, getSignerRequired } from '@/lib/ethersHelpers';
+import { getRoleImage } from '@/lib/roleImages';
+import Image from 'next/image';
 
 /** Calculate commit consistent with contract:keccak256(abi.encode(address(this), dayCount, targetSeat, salt)) */
 function encodeCommit(gameAddr: string, day: bigint, target: number, saltHex32: string) {
@@ -408,10 +410,9 @@ export default function PlayerNight({ gameAddress }: { gameAddress: string }) {
   };
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
-      <div style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>
-        My identity: <span style={{ fontWeight: 600, color: '#333' }}>{identityText}</span>
-      </div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 24, alignItems: 'start' }}>
+      {/* Left: Main Content */}
+      <div style={{ display: 'grid', gap: 16 }}>
 
       {/* NightCommit */}
       {phase === 2 && (
@@ -567,6 +568,37 @@ export default function PlayerNight({ gameAddress }: { gameAddress: string }) {
           color: '#333'
         }}>
           {status}
+        </div>
+      )}
+      </div>
+
+      {/* Right: Role Card */}
+      {myRole !== null && getRoleImage(myRole) && joined && phase >= 2 && Number(dayCount) > 0 && (
+        <div style={{
+          border: '2px solid #667eea',
+          borderRadius: 16,
+          padding: 20,
+          background: 'linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 12,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          position: 'sticky',
+          top: 20,
+          minWidth: 140,
+        }}>
+          <div style={{ fontSize: 14, color: '#666', fontWeight: 500 }}>Your Role</div>
+          <Image
+            src={getRoleImage(myRole)!}
+            alt={ROLE_NAMES[myRole]}
+            width={100}
+            height={100}
+            style={{ borderRadius: 12, objectFit: 'cover', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)' }}
+          />
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#667eea', textAlign: 'center' }}>
+            {ROLE_NAMES[myRole]}
+          </div>
         </div>
       )}
     </div>
