@@ -307,7 +307,7 @@ export default function PlayerPage() {
             )}
 
             {phase === 6 && (
-              <PlayerEnd key={`${gameAddress}:end`} gameAddress={gameAddress} />
+              <PlayerEnd key={`${gameAddress}:end`} gameAddress={gameAddress} account={account} />
             )}
 
             {[1, 4].includes(phase) && (

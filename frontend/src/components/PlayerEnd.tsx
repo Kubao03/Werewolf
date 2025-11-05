@@ -8,6 +8,11 @@ import { getBrowserProvider } from '@/lib/ethersHelpers';
 import { getRoleImage } from '@/lib/roleImages';
 import Image from 'next/image';
 
+interface PlayerEndProps {
+  gameAddress: string;
+  account?: string;
+}
+
 /** Simple batch reader for concurrent reads, preventing RPC overload */
 async function batchMap<T, R>(arr: T[], fn: (t: T, i: number) => Promise<R>, batchSize = 10): Promise<R[]> {
   const out: R[] = [];
@@ -19,7 +24,7 @@ async function batchMap<T, R>(arr: T[], fn: (t: T, i: number) => Promise<R>, bat
   return out;
 }
 
-export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
+export default function PlayerEnd({ gameAddress, account }: PlayerEndProps) {
   const provider = useMemo(getBrowserProvider, []);
   const game = useMemo(
     () => (provider ? new ethers.Contract(gameAddress, GAME_ABI, provider) : null),
@@ -34,6 +39,10 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
   const [phase, setPhase] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [err, setErr] = useState<string>('');
+  const [myRole, setMyRole] = useState<number | null>(null);
+  const [aliveWolves, setAliveWolves] = useState<number>(0);
+  const [aliveNonWolves, setAliveNonWolves] = useState<number>(0);
+  const [playerWon, setPlayerWon] = useState<boolean | null>(null);
 
   const refresh = async () => {
     if (!game) return;
@@ -41,16 +50,22 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
     setErr('');
     try {
       // Read basic info
-      const [nRaw, pRaw, dRaw] = await Promise.all([
+      const [nRaw, pRaw, dRaw, wolvesRaw, nonWolvesRaw] = await Promise.all([
         game.seatsCount(), // uint256 -> bigint
         game.phase(),      // uint8
         game.dayCount(),   // uint64 -> bigint
+        game.aliveWolves(), // uint32
+        game.aliveNonWolves(), // uint32
       ]);
       const n = Number(nRaw as bigint);
       const d = Number(dRaw as bigint);
+      const wolves = Number(wolvesRaw as bigint);
+      const nonWolves = Number(nonWolvesRaw as bigint);
       setSeatsCount(n);
       setPhase(Number(pRaw));
       setDayCount(Number.isFinite(d) ? d : 0);
+      setAliveWolves(wolves);
+      setAliveNonWolves(nonWolves);
 
       if (n === 0) {
         setRows([]);
@@ -78,6 +93,36 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
       });
 
       setRows(revealed);
+
+      // Get player's role if account is provided
+      if (account) {
+        try {
+          const signer = await provider!.getSigner();
+          const gameWithSigner = new ethers.Contract(gameAddress, GAME_ABI, signer);
+          const roleNum = Number(await gameWithSigner.roleOf(account));
+          setMyRole(roleNum);
+          
+          // Determine if player won
+          // Good wins if aliveWolves == 0
+          // Wolves win if aliveWolves >= aliveNonWolves
+          const goodWon = wolves === 0;
+          const wolvesWon = wolves >= nonWolves;
+          
+          // Player is wolf if role === 1
+          const isWolf = roleNum === 1;
+          
+          if (goodWon) {
+            setPlayerWon(!isWolf); // Good wins, player wins if not wolf
+          } else if (wolvesWon) {
+            setPlayerWon(isWolf); // Wolves win, player wins if wolf
+          } else {
+            setPlayerWon(null); // Game still in progress (shouldn't happen in Ended phase)
+          }
+        } catch {
+          setMyRole(null);
+          setPlayerWon(null);
+        }
+      }
     } catch (e: any) {
       setErr(e?.message || String(e));
     } finally {
@@ -93,8 +138,8 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
   // Statistics
   const aliveCount = rows.filter((r) => r.alive).length;
   const deadCount = rows.length - aliveCount;
-  const wolves = rows.filter((r) => r.role === 1).length; // Role.Wolf = 1
-  const goods = rows.filter((r) => r.role != null && r.role !== 1).length;
+  const wolvesCount = rows.filter((r) => r.role === 1).length; // Role.Wolf = 1
+  const goodsCount = rows.filter((r) => r.role != null && r.role !== 1).length;
 
   // Styles
   const section: React.CSSProperties = { border: '1px solid #eee', borderRadius: 16, padding: 16, background: '#fafafa' };
@@ -129,7 +174,101 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
   };
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
+    <div style={{ display: 'grid', gap: 24 }}>
+      {/* Victory/Defeat Screen */}
+      {playerWon !== null && account && (
+        <div style={{
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 24,
+          padding: '48px 32px',
+          background: playerWon 
+            ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%)'
+            : 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 50%, #fecaca 100%)',
+          border: `3px solid ${playerWon ? '#22c55e' : '#ef4444'}`,
+          boxShadow: playerWon
+            ? '0 20px 25px -5px rgba(34, 197, 94, 0.3), 0 10px 10px -5px rgba(34, 197, 94, 0.2)'
+            : '0 20px 25px -5px rgba(239, 68, 68, 0.3), 0 10px 10px -5px rgba(239, 68, 68, 0.2)',
+          textAlign: 'center',
+        }}>
+          {/* Decorative elements */}
+          <div style={{
+            position: 'absolute',
+            top: -50,
+            right: -50,
+            width: 200,
+            height: 200,
+            borderRadius: '50%',
+            background: playerWon ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+            filter: 'blur(40px)',
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: -50,
+            left: -50,
+            width: 200,
+            height: 200,
+            borderRadius: '50%',
+            background: playerWon ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+            filter: 'blur(40px)',
+          }} />
+          
+          {/* Main content */}
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              fontSize: 72,
+              fontWeight: 900,
+              marginBottom: 16,
+              background: playerWon
+                ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
+                : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            }}>
+              {playerWon ? '🎉 VICTORY 🎉' : '💀 DEFEAT 💀'}
+            </div>
+            
+            {myRole !== null && (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 12,
+                marginTop: 8,
+                padding: '12px 24px',
+                background: 'rgba(255, 255, 255, 0.8)',
+                borderRadius: 16,
+                fontSize: 18,
+                fontWeight: 600,
+                color: '#333',
+              }}>
+                {getRoleImage(myRole) && (
+                  <Image
+                    src={getRoleImage(myRole)!}
+                    alt={ROLE_NAMES[myRole]}
+                    width={40}
+                    height={40}
+                    style={{ borderRadius: 8, objectFit: 'cover' }}
+                  />
+                )}
+                <span>You were {ROLE_NAMES[myRole]}</span>
+              </div>
+            )}
+            
+            <div style={{
+              marginTop: 32,
+              fontSize: 14,
+              color: '#666',
+              fontWeight: 500,
+            }}>
+              Waiting for host to restart the game
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detailed Results */}
       <div style={section}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ fontWeight: 600, fontSize: 16 }}>Final Results & Role Reveal</div>
@@ -149,10 +288,15 @@ export default function PlayerEnd({ gameAddress }: { gameAddress: string }) {
           </div>
           {rows.some((r) => r.role != null) && (
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8, paddingTop: 8, borderTop: '1px solid #86efac' }}>
-              <span>Wolves: <b style={{ color: '#dc2626' }}>{wolves}</b></span>
-              <span>Villagers: <b style={{ color: '#065f46' }}>{goods}</b></span>
+              <span>Wolves: <b style={{ color: '#dc2626' }}>{wolvesCount}</b></span>
+              <span>Villagers: <b style={{ color: '#065f46' }}>{goodsCount}</b></span>
             </div>
           )}
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8, paddingTop: 8, borderTop: '1px solid #86efac' }}>
+            <span>Winner: <b style={{ color: aliveWolves === 0 ? '#065f46' : '#dc2626' }}>
+              {aliveWolves === 0 ? 'Good' : 'Wolves'}
+            </b></span>
+          </div>
         </div>
 
         <table style={table}>
