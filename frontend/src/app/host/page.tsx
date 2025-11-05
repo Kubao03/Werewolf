@@ -26,7 +26,7 @@ const loadGameAddress = (account: string): string | null => {
 export default function HostPage() {
   const { provider, account, chainId, isConnected } = useWallet();
 
-  const [factoryAddress, setFactoryAddress] = useState<string>('0xD9801e5CF2B368eAa196753a0784C5786179d0C0');
+  const [factoryAddress, setFactoryAddress] = useState<string>('0xB2061AED53426B9e8C620111AF9b870BA0403D0A');
   const [gameAddress, setGameAddress] = useState<string>('');
   const [manualGameAddress, setManualGameAddress] = useState<string>('');
 

@@ -128,14 +128,31 @@ export default function PlayerDay({ gameAddress, provider, account }: PlayerDayP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider, gameAddress, account]);
 
-  // Calculate leader
+  // Calculate leader and detect ties
   const leader = React.useMemo(() => {
-    let idx = -1, max = -1;
+    let max = -1;
+    // Find max votes
     for (let i = 0; i < tally.length; i++) {
-      if (tally[i] > max) { max = tally[i]; idx = i; }
+      if (tally[i] > max) { max = tally[i]; }
     }
-    return { idx, votes: max };
-  }, [tally]);
+    
+    // Find all players with max votes
+    const leaders: number[] = [];
+    for (let i = 0; i < tally.length; i++) {
+      if (tally[i] === max && max > 0 && alive[i]) {
+        leaders.push(i);
+      }
+    }
+    
+    // If only one leader, return it; otherwise return -1 to indicate tie
+    const isTie = leaders.length > 1;
+    return { 
+      idx: isTie ? -1 : (leaders.length === 1 ? leaders[0] : -1), 
+      votes: max,
+      leaders: leaders, // Array of all players with max votes
+      isTie: isTie
+    };
+  }, [tally, alive]);
 
   const validateTarget = (t: number) => {
     if (!Number.isInteger(t) || t < 0 || t >= seatsCount) {
@@ -259,28 +276,51 @@ export default function PlayerDay({ gameAddress, provider, account }: PlayerDayP
 
       <div style={section}>
         <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 12 }}>Vote Tally</div>
+        {leader.isTie && leader.votes > 0 && (
+          <div style={{ 
+            marginBottom: 12, 
+            padding: '10px 12px', 
+            background: '#fff7ed', 
+            borderRadius: 8, 
+            border: '1px solid #fdba74',
+            fontSize: 13,
+            color: '#b45309',
+            fontWeight: 500
+          }}>
+            ⚠️ Tie detected: {leader.leaders.length} players have {leader.votes} vote{leader.votes !== 1 ? 's' : ''} each. No execution will occur.
+          </div>
+        )}
         <div style={{ display: 'grid', gap: 8 }}>
-          {[...Array(seatsCount)].map((_, i) => (
-            <div 
-              key={i} 
-              style={{ 
-                display: 'flex', 
-                gap: 16, 
-                alignItems: 'center',
-                padding: '10px 12px',
-                background: leader.idx === i && leader.votes > 0 ? '#f0fdf4' : '#fff',
-                borderRadius: 8,
-                border: leader.idx === i && leader.votes > 0 ? '1px solid #86efac' : '1px solid #eee'
-              }}
-            >
-              <div style={{ fontWeight: 600, minWidth: 40 }}>#{i}</div>
-              <div style={{ minWidth: 80 }}>{alive[i] ? <span style={{ color: '#065f46' }}>🟢 Alive</span> : <span style={{ color: '#666' }}>⚫️ Dead</span>}</div>
-              <div style={{ minWidth: 80 }}>Votes: <b style={{ fontSize: 16 }}>{tally[i] || 0}</b></div>
-              {leader.idx === i && leader.votes > 0 && (
-                <div style={{ color: '#065f46', fontWeight: 600 }}>← Current Leader</div>
-              )}
-            </div>
-          ))}
+          {[...Array(seatsCount)].map((_, i) => {
+            const isLeader = leader.leaders.includes(i);
+            const isTied = leader.isTie && isLeader;
+            const isUniqueLeader = !leader.isTie && isLeader && leader.votes > 0;
+            
+            return (
+              <div 
+                key={i} 
+                style={{ 
+                  display: 'flex', 
+                  gap: 16, 
+                  alignItems: 'center',
+                  padding: '10px 12px',
+                  background: isUniqueLeader ? '#f0fdf4' : isTied ? '#fff7ed' : '#fff',
+                  borderRadius: 8,
+                  border: isUniqueLeader ? '1px solid #86efac' : isTied ? '1px solid #fdba74' : '1px solid #eee'
+                }}
+              >
+                <div style={{ fontWeight: 600, minWidth: 40 }}>#{i}</div>
+                <div style={{ minWidth: 80 }}>{alive[i] ? <span style={{ color: '#065f46' }}>🟢 Alive</span> : <span style={{ color: '#666' }}>⚫️ Dead</span>}</div>
+                <div style={{ minWidth: 80 }}>Votes: <b style={{ fontSize: 16 }}>{tally[i] || 0}</b></div>
+                {isUniqueLeader && (
+                  <div style={{ color: '#065f46', fontWeight: 600 }}>← Current Leader</div>
+                )}
+                {isTied && (
+                  <div style={{ color: '#b45309', fontWeight: 600 }}>← Tied ({leader.leaders.length} players)</div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
