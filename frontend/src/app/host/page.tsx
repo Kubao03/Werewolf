@@ -25,19 +25,19 @@ const loadGameAddress = (account: string): string | null => {
 export default function HostPage() {
   const { provider, account, chainId, isConnected } = useWallet();
 
-  const [factoryAddress, setFactoryAddress] = useState<string>('0xa8e551bf8af07583f1492c4596dae296d1636e98');
+  const [factoryAddress, setFactoryAddress] = useState<string>('0xD9801e5CF2B368eAa196753a0784C5786179d0C0');
   const [gameAddress, setGameAddress] = useState<string>('');
   const [manualGameAddress, setManualGameAddress] = useState<string>('');
 
   // Game configuration
-  const [minPlayers, setMinPlayers] = useState('4');
-  const [maxPlayers, setMaxPlayers] = useState('10');
-  const [wolves, setWolves] = useState('2');
-  const [stake, setStake] = useState('0.001');
-  const [tSetup, setTSetup] = useState('300');
-  const [tNightCommit, setTNightCommit] = useState('180');
-  const [tNightReveal, setTNightReveal] = useState('180');
-  const [tDayVote, setTDayVote] = useState('300');
+  const [minPlayers, setMinPlayers] = useState('3');
+  const [maxPlayers, setMaxPlayers] = useState('5');
+  const [wolves, setWolves] = useState('1');
+  const [stake, setStake] = useState('0');
+  const [tSetup, setTSetup] = useState('1');
+  const [tNightCommit, setTNightCommit] = useState('1');
+  const [tNightReveal, setTNightReveal] = useState('1');
+  const [tDayVote, setTDayVote] = useState('1');
 
   const [message, setMessage] = useState<string>('');
   const [msgType, setMsgType] = useState<'ok' | 'err' | 'muted' | ''>('');
