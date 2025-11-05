@@ -8,6 +8,7 @@ import { FACTORY_ABI, GAME_ABI } from '@/lib/gameAbi';
 import GameHeader from '@/components/GameHeader';
 import PlayerList from '@/components/PlayerList';
 import HostControl from '@/components/HostControl';
+import VoteTally from '@/components/VoteTally';
 
 // Helper functions for localStorage
 const getSavedGameKey = (account: string) => `werewolf_host_game_${account.toLowerCase()}`;
@@ -436,6 +437,7 @@ export default function HostPage() {
                   provider={provider}
                   showRoles={showRoles}
                 />
+                <VoteTally gameAddress={gameAddress} provider={provider} />
               </div>
 
               <HostControl gameAddress={gameAddress} provider={provider} onMessage={toast} />
