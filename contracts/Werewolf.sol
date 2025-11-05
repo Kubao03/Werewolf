@@ -130,6 +130,50 @@ contract WerewolfGame {
         _advance(Phase.Setup, cfg.tSetup);
     }
 
+    /* ------------ Restart Game ------------ */
+
+    /**
+     * @dev Reset game to initial state (Lobby phase) while keeping all players
+     * Only host can call this function
+     */
+    function restart() external {
+        require(msg.sender == host, "only host");
+        require(seats.length > 0, "no players");
+
+        // Reset phase to Lobby
+        phase = Phase.Lobby;
+        dayCount = 0;
+        deadline = 0;
+
+        // Reset all seats: alive = true, role = Villager
+        uint n = seats.length;
+        for (uint i = 0; i < n; i++) {
+            seats[i].alive = true;
+            seats[i].role = Role.Villager;
+        }
+
+        // Reset all game state
+        _resetNightState();
+        
+        // Reset Witch potions
+        for (uint i = 0; i < n; i++) {
+            address p = seats[i].player;
+            if (p != address(0)) {
+                hasAntidote[p] = false;
+                hasPoison[p] = false;
+            }
+        }
+
+        // Reset Hunter
+        hunterToShoot = 0;
+
+        // Reset alive counts
+        aliveWolves = 0;
+        aliveNonWolves = 0;
+
+        emit PhaseAdvanced(Phase.Lobby, 0);
+    }
+
     /* ------------ Setup (Host assigns roles) ------------ */
 
     function assignRoles(Role[] calldata roles) external inPhase(Phase.Setup) {

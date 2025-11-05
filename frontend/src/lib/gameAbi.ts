@@ -48,6 +48,7 @@ export const GAME_ABI = [
     // -------- actions (host) --------
     { inputs: [], name: "start", outputs: [], stateMutability: "nonpayable", type: "function" },
     { inputs: [{ internalType: "uint8[]", name: "roles", type: "uint8[]" }], name: "assignRoles", outputs: [], stateMutability: "nonpayable", type: "function" },
+    { inputs: [], name: "restart", outputs: [], stateMutability: "nonpayable", type: "function" },
     
     // -------- phase progression --------
     { inputs: [], name: "advanceToNightReveal", outputs: [], stateMutability: "nonpayable", type: "function" },

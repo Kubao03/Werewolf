@@ -243,9 +243,73 @@ export default function HostControl({ gameAddress, provider, onMessage }: HostCo
       {phase === 6 && (
         <div style={card}>
           <div style={{ fontWeight: 600, marginBottom: 12, color: '#16a34a' }}>🎉 Game Over</div>
-          <div style={{ fontSize: 14 }}>
+          <div style={{ fontSize: 14, marginBottom: 16 }}>
             The game has ended. Check the results in the player list.
           </div>
+          <button
+            onClick={async () => {
+              try {
+                if (!provider) throw new Error('Please connect wallet');
+                const signer = await provider.getSigner();
+                const game = new ethers.Contract(gameAddress, GAME_ABI, signer);
+                
+                onMessage('Restarting game...', 'muted');
+                const tx = await game.restart();
+                await tx.wait();
+                onMessage('Game restarted! All players remain, but game state is reset to Lobby.', 'ok');
+                await refresh();
+              } catch (e: any) {
+                onMessage(e.message || String(e), 'err');
+              }
+            }}
+            style={{
+              ...btn,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              fontWeight: 600,
+              width: '100%',
+            }}
+          >
+            🔄 Restart Game (Keep Players)
+          </button>
+        </div>
+      )}
+
+      {/* Restart button for any phase except Lobby (always available) */}
+      {phase !== 0 && phase !== 6 && (
+        <div style={card}>
+          <div style={{ fontWeight: 600, marginBottom: 12 }}>Restart Game</div>
+          <div style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>
+            Reset the game to Lobby phase while keeping all players. You can then start a new game with the same players.
+          </div>
+          <button
+            onClick={async () => {
+              try {
+                if (!provider) throw new Error('Please connect wallet');
+                const signer = await provider.getSigner();
+                const game = new ethers.Contract(gameAddress, GAME_ABI, signer);
+                
+                onMessage('Restarting game...', 'muted');
+                const tx = await game.restart();
+                await tx.wait();
+                onMessage('Game restarted! All players remain, but game state is reset to Lobby.', 'ok');
+                await refresh();
+              } catch (e: any) {
+                onMessage(e.message || String(e), 'err');
+              }
+            }}
+            style={{
+              ...btn,
+              background: '#f5f5f5',
+              border: '1px solid #ddd',
+              color: '#333',
+              fontWeight: 600,
+              width: '100%',
+            }}
+          >
+            🔄 Restart Game (Keep Players)
+          </button>
         </div>
       )}
     </div>
