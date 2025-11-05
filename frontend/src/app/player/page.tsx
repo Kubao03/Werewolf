@@ -10,6 +10,7 @@ import PlayerDay from '@/components/PlayerDay';
 import PlayerHunter from '@/components/PlayerHunter';
 import PlayerEnd from '@/components/PlayerEnd';
 import { GAME_ABI, PHASE_NAMES, ROLE_NAMES } from '@/lib/gameAbi';
+import PlayerSeatTable from '@/components/PlayerSeatTable';
 
 // Helper functions for localStorage
 const getSavedGameKey = (account: string) => `werewolf_player_game_${account.toLowerCase()}`;
@@ -272,6 +273,9 @@ export default function PlayerPage() {
             </div>
 
             <GameHeader gameAddress={gameAddress} />
+
+            {/* Player Seat Table */}
+            {yourSeat1B > 0 && <PlayerSeatTable gameAddress={gameAddress} provider={provider} account={account} phase={phase} yourSeat0Based={yourSeat1B - 1} />}
 
             {phase === 0 && (
               <div style={card}>

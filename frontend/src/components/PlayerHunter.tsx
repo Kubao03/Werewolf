@@ -147,10 +147,10 @@ export default function PlayerHunter({ gameAddress }: { gameAddress: string }) {
 
       <div style={{ marginBottom: 16, fontSize: 13, color: '#666', padding: 12, background: '#f9fafb', borderRadius: 8 }}>
         <div style={{ marginBottom: 8 }}>
-          Your seat (1-based): <span style={mono}>{yourSeat1B || 'Not joined'}</span>
+          Your seat: <span style={mono}>{yourSeat1B > 0 ? `#${yourSeat1B - 1}` : 'Not joined'}</span>
         </div>
         <div>
-          Current hunter seat (1-based): <span style={mono}>{hunterToShoot1B || 'None'}</span>
+          Current hunter seat: <span style={mono}>{hunterToShoot1B > 0 ? `#${hunterToShoot1B - 1}` : 'None'}</span>
         </div>
       </div>
 

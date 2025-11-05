@@ -38,7 +38,6 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
       const n = Number(nRaw as bigint);
       setSeatsCount(n);
       setHost(String(hostAddr));
-      setIsHost(!!account && hostAddr && account.toLowerCase() === String(hostAddr).toLowerCase());
 
       const seatsArr = await Promise.all(
         [...Array(n)].map(async (_, i) => {
@@ -59,12 +58,18 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
       if (account) {
         const seat1 = Number(await game.seatOf(account)); // uint8 -> number
         setYourSeat1Based(seat1);
+        // Update isHost after account is set
+        setIsHost(account.toLowerCase() === String(hostAddr).toLowerCase());
         if (seat1 > 0) {
           const myAlive = Boolean((await game.seats(seat1 - 1)).alive);
           setYouAlive(myAlive);
         } else {
           setYouAlive(false);
         }
+      } else {
+        setYourSeat1Based(0);
+        setYouAlive(false);
+        setIsHost(false);
       }
     } catch (e: any) {
       setStatus(e?.message || String(e));
@@ -74,22 +79,32 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
   // Initialize account + periodic refresh
   useEffect(() => {
     if (!provider) return;
+    let mounted = true;
     (async () => {
       try {
         await provider.send('eth_requestAccounts', []);
         const s = await provider.getSigner();
         const addr = await s.getAddress();
-        setAccount(addr);
-        // Refresh immediately after account is set
-        if (game) {
-          await refresh();
+        if (mounted) {
+          setAccount(addr);
+          // Refresh immediately after account is set
+          if (game) {
+            await refresh();
+          }
         }
       } catch (e) {
         console.warn('Failed to get account:', e);
       }
     })();
-    const t = setInterval(refresh, 5000);
-    return () => clearInterval(t);
+    const t = setInterval(() => {
+      if (mounted && game) {
+        refresh();
+      }
+    }, 5000);
+    return () => {
+      mounted = false;
+      clearInterval(t);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider, gameAddress]);
 
@@ -201,7 +216,7 @@ export default function PlayerDay({ gameAddress }: { gameAddress: string }) {
 
         <div style={{ marginTop: 16, fontSize: 13, color: '#666', padding: 12, background: '#f9fafb', borderRadius: 8 }}>
           <div style={{ marginBottom: 8 }}>
-            Your seat (1-based): <span style={mono}>{yourSeat1Based || 'Not joined'}</span>
+            Your seat: <span style={mono}>{yourSeat1Based > 0 ? `#${yourSeat1Based - 1}` : 'Not joined'}</span>
           </div>
           <div>
             Status: {youAlive ? <span style={{ color: '#065f46', fontWeight: 600 }}>🟢 Alive</span> : <span style={{ color: '#666' }}>⚫️ Cannot vote</span>}
